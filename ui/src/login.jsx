@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import logo1 from "./assets/logo1.png";
 
 function Login() {
   const [form, setForm] = useState({ username: "", password: "" });
@@ -7,23 +8,31 @@ function Login() {
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const res = await fetch("http://localhost:5000/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form)
-    });
+    try {
+      const res = await fetch("http://localhost:5000/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
 
-    const data = await res.json();
-    setMessage(data.message);
+      const data = await res.json();
+      setMessage(data.message);
 
-    if (data.message === "Login success") {
-      navigate("/"); // or dashboard later
+      if (data.message === "Login success") {
+        navigate("/");
+      }
+    } catch (error) {
+      setMessage("Server error. Please try again.");
+      console.error(error);
     }
   };
 
@@ -32,8 +41,10 @@ function Login() {
       <div className="shader"></div>
 
       <div className="logointromod">
-        
+        <img className="logointro" src={logo1} alt="logo" />
+
         <div className="register-box">
+
           <h2 className="register-title">Login</h2>
 
           {message && <div className="msg">{message}</div>}
