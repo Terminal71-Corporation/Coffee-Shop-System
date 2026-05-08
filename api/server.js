@@ -10,8 +10,9 @@ app.use(cors());
 app.use(express.json());
 
 // routes
-app.use('/products', require('./routes/productRoutes'))
-app.use('/', require('./routes/authRoutes'));
+app.use('/api', require('./routes/productRoutes'))
+app.use('/api', require('./routes/authRoutes'));
+app.use('/api', require('./routes/cartRoutes'));
 
 // start server
 app.listen(PORT, () => {
