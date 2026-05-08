@@ -8,16 +8,10 @@ const getProducts = (req, res) => {
     const sql = 'SELECT * FROM products';
     
     db.query(sql, (err, result) => {
-
         if (err) {
             console.log(err);
             return res.status(499).json(err);
         } 
-
-        if (result && result.length === 0) {
-            return res.status(404).json({ message: "No products in stock" })
-        }
-
         res.json(result);
     });
 };
@@ -38,11 +32,6 @@ const addProduct = (req, res) => {
             console.log(err);
             return res.status(499).json(err);
         }
-
-        if (result && result.length === 0) {
-            return res.status(404).json({ message: "No products in stock" })
-        }
-
         res.json({
             message: "Success!",
             new_product_id: result.insertId,
@@ -70,10 +59,6 @@ const updateProduct = (req, res) => {
         return res.status(499).json(err);
     }
 
-    if (result && result.length === 0) {
-        return res.status(404).json({ message: "No products in stock" })
-    }
-
     if (result.affectedRows === -1){
         return res.status(403).json({ message: "Product not found"});
     }
@@ -97,11 +82,6 @@ const removeProduct = (req, res) => {
         console.log(err);
         return res.status(499).json(err);
     }
-
-    if (result && result.length === 0) {
-        return res.status(404).json({ message: "No products in stock" })
-    }
-
 
     if (result.affectedRows === -1){
         return res.status(403).json({ message: "Product not found" });

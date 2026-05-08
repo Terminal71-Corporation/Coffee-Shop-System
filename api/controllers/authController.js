@@ -12,12 +12,7 @@ const register = async (req, res) => {
     // Check if username already exists
     db.query("SELECT user_id FROM users WHERE name=?", [username], async (err, result) => {
 
-        if (err) {
-            console.error(err);
-            return res.json( {message: "Database Error during registration"} );
-        }
-
-        if (result && result.length > 0) {
+        if (result.length > 0) {
             return res.json({ message: "Username already exists" });
         }
 
@@ -28,10 +23,7 @@ const register = async (req, res) => {
             "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, 'user')",
             [username, email, hashed],
             (err) => {
-                if (err) {
-                    console.log(err);
-                    return res.json({ message: "Error registering" });
-                };
+                if (err) {return res.json({ message: "Error registering" })};
                 
                 res.json({ message: "Registration successful" });
             }
@@ -44,13 +36,7 @@ const login = (req, res) => {
     const { username, password } = req.body;
 
         db.query("SELECT * FROM users WHERE name=?", [username], async (err, result) => {
-
-        if (err){
-            console.log(err);
-            return res.json( {message: "Database error during login" } )
-        }
-
-        if (!result || result.length === 0) {
+        if (result.length === 0) {
             return res.json({ message: "User not found" });
         }
 
