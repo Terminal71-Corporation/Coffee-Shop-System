@@ -1,46 +1,109 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./Navbar.css";
 
-function Navbar({ setUser }) {
+const CATEGORIES = [
+  "All",
+  "Espresso",
+  "Latte",
+  "Tea",
+  "Pastries",
+  "Beans",
+  "Equipment",
+];
+
+function Navbar({
+  setUser,
+  activeCategory,
+  setActiveCategory,
+}) {
+
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem("user"));
+
+  const user = JSON.parse(
+    localStorage.getItem("user")
+  );
+
   const [search, setSearch] = useState("");
 
+  const [suggestions, setSuggestions] = useState([]);
+
   const handleLogout = () => {
+
     localStorage.removeItem("user");
+
     setUser(null);
+
     navigate("/login");
   };
 
   const handleSearch = (e) => {
+
     e.preventDefault();
+
     navigate(`/products?search=${search}`);
+
+    setSuggestions([]);
   };
+
+  const handleCategoryClick = (cat) => {
+
+    if (setActiveCategory)
+      setActiveCategory(cat);
+
+    if (cat === "All") {
+      navigate("/products");
+    } else {
+      navigate(
+        `/products?cat=${cat.toLowerCase()}`
+      );
+    }
+  };
+
+  useEffect(() => {
+
+    fetch("http://localhost:5000/products")
+      .then((res) => res.json())
+      .then((data) => {
+
+        if (search.length > 0) {
+
+          const filtered = data.filter((p) =>
+            p.name
+              .toLowerCase()
+              .includes(search.toLowerCase())
+          );
+
+          setSuggestions(filtered);
+
+        } else {
+          setSuggestions([]);
+        }
+
+      });
+
+  }, [search]);
 
   return (
     <header className="site-header">
 
-      {/* TOP BAR */}
       <div className="topbar">
-        <div className="steam-container">
-          <span className="steam"></span>
-          <span className="steam"></span>
-          <span className="steam"></span>
-        </div>
 
         <span className="topbar-tagline">
           Premium Coffee Experience ☕
         </span>
 
         <div className="topbar-right">
+
           {user && (
-            <span className="nav-user">
+            <span>
               Hi, <strong>{user.username}</strong>
             </span>
           )}
 
-          <Link to="/profile">My Account</Link>
+          <Link to="/profile">
+            My Account
+          </Link>
 
           <button
             className="topbar-logout"
@@ -48,79 +111,129 @@ function Navbar({ setUser }) {
           >
             Logout
           </button>
+
         </div>
+
       </div>
 
-      {/* MAIN NAVBAR */}
       <nav className="navbar-main">
 
-        {/* LOGO */}
-        <Link to="/home" className="navbar-logo">
+        <Link
+          to="/home"
+          className="navbar-logo"
+        >
           ☕ Coffee<span>Shop</span>
         </Link>
 
-        {/* SEARCH */}
-        <form className="search-bar" onSubmit={handleSearch}>
+        <div className="search-wrapper">
 
-          <input
-            type="text"
-            placeholder="Search coffee, pastries..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="search-input"
-          />
+          <form
+            className="search-bar"
+            onSubmit={handleSearch}
+          >
 
-          <button type="submit" className="search-btn">
-            🔍
-          </button>
+            <input
+              type="text"
+              placeholder="Search coffee..."
+              value={search}
+              onChange={(e) =>
+                setSearch(e.target.value)
+              }
+              className="search-input"
+            />
 
-        </form>
+            <button
+              type="submit"
+              className="search-btn"
+            >
+              🔍
+            </button>
 
-        {/* ACTIONS */}
+          </form>
+
+          {suggestions.length > 0 && (
+
+            <div className="search-suggestions">
+
+              {suggestions
+                .slice(0,5)
+                .map((item) => (
+
+                  <div
+                    key={item.product_id}
+                    className="suggestion-item"
+                    onClick={() => {
+
+                      navigate(
+                        `/products?search=${item.name}`
+                      );
+
+                      setSearch(item.name);
+
+                      setSuggestions([]);
+                    }}
+                  >
+                    {item.name}
+                  </div>
+
+              ))}
+
+            </div>
+
+          )}
+
+        </div>
+
         <div className="navbar-actions">
 
           <Link to="/home" className="action-btn">
-            <span>🏠</span>
-            <p>Home</p>
+            🏠
           </Link>
 
-          <Link to="/products" className="action-btn">
-            <span>☕</span>
-            <p>Products</p>
+          <Link
+            to="/products"
+            className="action-btn"
+          >
+            ☕
           </Link>
 
-          <Link to="/cart" className="action-btn cart-btn">
-            <span>🛒</span>
-            <p>Cart</p>
-
-            <div className="cart-badge">
-              2
-            </div>
+          <Link
+            to="/cart"
+            className="action-btn"
+          >
+            🛒
           </Link>
 
-          <Link to="/orders" className="action-btn">
-            <span>📦</span>
-            <p>Orders</p>
-          </Link>
-
-          <Link to="/messages" className="action-btn">
-            <span>💬</span>
-            <p>Messages</p>
+          <Link
+            to="/orders"
+            className="action-btn"
+          >
+            📦
           </Link>
 
         </div>
+
       </nav>
 
-      {/* CATEGORY BAR */}
       <nav className="navbar-categories">
 
-        <Link to="/products">All</Link>
-        <Link to="/products?cat=espresso">Espresso</Link>
-        <Link to="/products?cat=latte">Latte</Link>
-        <Link to="/products?cat=tea">Tea</Link>
-        <Link to="/products?cat=pastries">Pastries</Link>
-        <Link to="/products?cat=beans">Beans</Link>
-        <Link to="/products?cat=equipment">Equipment</Link>
+        {CATEGORIES.map((cat) => (
+
+          <button
+            key={cat}
+            className={`cat-link ${
+              activeCategory === cat
+                ? "cat-active"
+                : ""
+            }`}
+            onClick={() =>
+              handleCategoryClick(cat)
+            }
+          >
+            {cat}
+          </button>
+
+        ))}
 
       </nav>
 

@@ -33,32 +33,38 @@ const getProducts = (req, res) => {
 const addProduct = (req, res) => {
 
   const {
-    name,
-    description,
-    price,
-    stock
-  } = req.body;
+  name,
+  description,
+  category,
+  price,
+  stock,
+  image_url
+} = req.body;
 
 
   const sql = `
-    INSERT INTO products
-    (
-      name,
-      description,
-      price,
-      stock
-    )
-    VALUES (?, ?, ?, ?)
-  `;
+  INSERT INTO products
+  (
+    name,
+    description,
+    category,
+    price,
+    stock,
+    image_url
+  )
+  VALUES (?, ?, ?, ?, ?, ?)
+`;
 
   db.query(
     sql,
     [
-      name,
-      description,
-      price,
-      stock
-    ],
+  name,
+  description,
+  category,
+  price,
+  stock,
+  image_url
+],
     (err, result) => {
 
       if (err) {
@@ -78,7 +84,62 @@ const addProduct = (req, res) => {
 
 };
 
+const updateProduct = (req, res) => {
 
+  const { id } = req.params;
+
+  const {
+    name,
+    description,
+    category,
+    price,
+    stock,
+    image_url
+  } = req.body;
+
+  const sql = `
+    UPDATE products
+    SET
+      name = ?,
+      description = ?,
+      category = ?,
+      price = ?,
+      stock = ?,
+      image_url = ?
+    WHERE product_id = ?
+  `;
+
+  db.query(
+    sql,
+    [
+      name,
+      description,
+      category,
+      price,
+      stock,
+      image_url,
+      id
+    ],
+    (err, result) => {
+
+      if (err) {
+
+        console.log(err);
+
+        return res.status(500).json({
+          message: "Failed to update product"
+        });
+
+      }
+
+      res.json({
+        message: "Product updated successfully"
+      });
+
+    }
+  );
+
+};
 // =====================================
 // DELETE PRODUCT
 // =====================================
@@ -113,5 +174,6 @@ const deleteProduct = (req, res) => {
 module.exports = {
   getProducts,
   addProduct,
+  updateProduct,
   deleteProduct
 };
