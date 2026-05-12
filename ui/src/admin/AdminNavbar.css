@@ -2,23 +2,57 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 18px 30px;
-  background: #120c05;
-  border-bottom: 2px solid #b8863c;
+  padding: 16px 40px;
+  background: rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(212, 160, 85, 0.2);
   margin-bottom: 30px;
+  border-radius: 12px;
+}
+
+.admin-navbar h2 {
+  color: #d4a055;
+  font-family: "Georgia", serif;
+  font-size: 1.3rem;
+  letter-spacing: 1px;
 }
 
 .admin-nav-links {
   display: flex;
-  gap: 20px;
+  gap: 24px;
 }
 
 .admin-nav-links a {
-  color: white;
+  color: rgba(255, 255, 255, 0.7);
   text-decoration: none;
-  font-weight: bold;
+  font-family: "Georgia", serif;
+  font-size: 0.95rem;
+  transition: color 0.2s;
 }
 
 .admin-nav-links a:hover {
   color: #d4a055;
+}
+
+.admin-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.goto-users-btn {
+  background: rgba(212, 160, 85, 0.15);
+  border: 1px solid rgba(212, 160, 85, 0.35);
+  color: #d4a055;
+  padding: 10px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: "Georgia", serif;
+  font-size: 0.9rem;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.goto-users-btn:hover {
+  background: rgba(212, 160, 85, 0.25);
+  transform: translateY(-1px);
 }
