@@ -3,6 +3,8 @@ const cors = require("cors");
 
 const authRoutes = require("./routes/authRoutes");
 const productRoutes = require("./routes/productRoutes");
+const categoryRoutes = require("./routes/categoryRoutes");
+const userRoutes = require("./routes/users"); // ADD THIS
 
 const app = express();
 
@@ -21,18 +23,15 @@ app.use(express.urlencoded({
   extended: true
 }));
 
-const categoryRoutes = require("./routes/categoryRoutes");
 
-app.use("/categories", categoryRoutes);
 // =====================================
 // ROUTES
 // =====================================
 
-// AUTH ROUTES
+app.use("/categories", categoryRoutes);
 app.use("/auth", authRoutes);
-
-// PRODUCT ROUTES
 app.use("/products", productRoutes);
+app.use("/users", userRoutes); // ADD THIS
 
 
 // =====================================

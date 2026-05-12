@@ -7,6 +7,7 @@ import Register from "./register";
 import Home from "./pages/Home";
 import AdminDashboard from "./admin/AdminDashboard";
 import Products from "./pages/Products";
+import Profile from "./pages/Profile";
 
 import music from "./assets/music.mp3";
 
@@ -17,12 +18,11 @@ function App() {
 
   const audioRef = useRef(null);
 
-  // AUTO PLAY MUSIC AFTER USER INTERACTION
   useEffect(() => {
     const enableAudio = async () => {
       try {
         if (audioRef.current) {
-          audioRef.current.volume = 0.3; // ✅ 30% volume
+          audioRef.current.volume = 0.3;
           await audioRef.current.play();
         }
       } catch (err) {
@@ -50,59 +50,40 @@ function App() {
       </audio>
 
       <BrowserRouter>
-
         <Routes>
 
           {/* DEFAULT */}
-          <Route
-            path="/"
-            element={<Navigate to="/login" />}
-          />
+          <Route path="/" element={<Navigate to="/login" />} />
 
           {/* LOGIN */}
           <Route
             path="/login"
-            element={
-              user
-                ? <Navigate to="/home" />
-                : <Login setUser={setUser} />
-            }
+            element={user ? <Navigate to="/home" /> : <Login setUser={setUser} />}
           />
 
           {/* REGISTER */}
           <Route
             path="/register"
-            element={
-              user
-                ? <Navigate to="/home" />
-                : <Register setUser={setUser} />
-            }
+            element={user ? <Navigate to="/home" /> : <Register setUser={setUser} />}
           />
 
           {/* HOME */}
           <Route
             path="/home"
-            element={
-              user
-                ? <Home setUser={setUser} />
-                : <Navigate to="/login" />
-            }
+            element={user ? <Home setUser={setUser} /> : <Navigate to="/login" />}
           />
-
-          {/* ADMIN */}
-          <Route path="/admin" element={<AdminDashboard />} />
 
           {/* PRODUCTS */}
           <Route
-  path="/products"
-  element={
-    user ? (
-      <Products setUser={setUser} />
-    ) : (
-      <Navigate to="/login" />
-    )
-  }
-/>
+            path="/products"
+            element={user ? <Products setUser={setUser} /> : <Navigate to="/login" />}
+          />
+
+          {/* PROFILE */}
+          <Route
+            path="/profile"
+            element={user ? <Profile setUser={setUser} /> : <Navigate to="/login" />}
+          />
 
           {/* CART */}
           <Route
@@ -111,14 +92,7 @@ function App() {
               user ? (
                 <>
                   <Navbar setUser={setUser} />
-
-                  <div
-                    style={{
-                      padding: "50px",
-                      color: "white",
-                      fontSize: "2rem"
-                    }}
-                  >
+                  <div style={{ padding: "50px", color: "white", fontSize: "2rem" }}>
                     🛒 Cart Page
                   </div>
                 </>
@@ -135,39 +109,8 @@ function App() {
               user ? (
                 <>
                   <Navbar setUser={setUser} />
-
-                  <div
-                    style={{
-                      padding: "50px",
-                      color: "white",
-                      fontSize: "2rem"
-                    }}
-                  >
+                  <div style={{ padding: "50px", color: "white", fontSize: "2rem" }}>
                     📦 Orders Page
-                  </div>
-                </>
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
-
-          {/* PROFILE */}
-          <Route
-            path="/profile"
-            element={
-              user ? (
-                <>
-                  <Navbar setUser={setUser} />
-
-                  <div
-                    style={{
-                      padding: "50px",
-                      color: "white",
-                      fontSize: "2rem"
-                    }}
-                  >
-                    👤 Profile Page
                   </div>
                 </>
               ) : (
@@ -183,14 +126,7 @@ function App() {
               user ? (
                 <>
                   <Navbar setUser={setUser} />
-
-                  <div
-                    style={{
-                      padding: "50px",
-                      color: "white",
-                      fontSize: "2rem"
-                    }}
-                  >
+                  <div style={{ padding: "50px", color: "white", fontSize: "2rem" }}>
                     💬 Messages Page
                   </div>
                 </>
@@ -199,12 +135,14 @@ function App() {
               )
             }
           />
+
           {/* ADMIN */}
           <Route path="/admin" element={<AdminDashboard />} />
 
+          {/* FALLBACK */}
           <Route path="*" element={<Navigate to="/login" />} />
-        </Routes>
 
+        </Routes>
       </BrowserRouter>
     </>
   );

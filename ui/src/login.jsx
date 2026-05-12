@@ -4,15 +4,13 @@ import logo1 from "./assets/logo1.png";
 
 function Login({ setUser }) {
   const [form, setForm] = useState({
-    username: "",
+    email: "",
     password: "",
   });
 
   const [message, setMessage] = useState("");
-
   const navigate = useNavigate();
 
-  // HANDLE INPUT CHANGES
   const handleChange = (e) => {
     setForm((prev) => ({
       ...prev,
@@ -20,32 +18,29 @@ function Login({ setUser }) {
     }));
   };
 
-  // HANDLE LOGIN
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
       const res = await fetch("http://localhost:5000/auth/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(form),
+        headers: { "Content-Type": "application/json" },
+        // send as "username" since authController reads req.body.username
+        body: JSON.stringify({
+          username: form.email,
+          password: form.password,
+        }),
       });
 
       const data = await res.json();
-
       setMessage(data.message);
 
-      // LOGIN SUCCESS
       if (data.message === "Login success") {
-        // SAVE USER
+        // SAVE USER + user_id to localStorage
         localStorage.setItem("user", JSON.stringify(data.user));
+        localStorage.setItem("user_id", data.user.user_id);
 
-        // UPDATE APP STATE
         setUser(data.user);
-
-        // GO TO HOME
         navigate("/home");
       }
     } catch (error) {
@@ -56,28 +51,22 @@ function Login({ setUser }) {
 
   return (
     <div className="page">
-      {/* DARK OVERLAY */}
       <div className="shader"></div>
 
-      {/* CENTER CONTENT */}
       <div className="logointromod">
-        {/* LOGO */}
         <img className="logointro" src={logo1} alt="logo" />
 
-        {/* LOGIN BOX */}
         <div className="register-box">
           <h2 className="register-title">Login</h2>
 
-          {/* MESSAGE */}
           {message && <div className="msg">{message}</div>}
 
-          {/* FORM */}
           <form onSubmit={handleSubmit}>
             <input
-              name="username"
-              type="text"
-              placeholder="Username"
-              value={form.username}
+              name="email"
+              type="email"
+              placeholder="Email"
+              value={form.email}
               onChange={handleChange}
               required
             />
@@ -91,13 +80,10 @@ function Login({ setUser }) {
               required
             />
 
-            <input type="submit" value="Login" />
+            <input type="submit" value="LOGIN" />
           </form>
 
-          {/* REGISTER LINK */}
-          <Link to="/register">
-            Don't have an account?
-          </Link>
+          <Link to="/register">Don't have an account?</Link>
         </div>
       </div>
     </div>
