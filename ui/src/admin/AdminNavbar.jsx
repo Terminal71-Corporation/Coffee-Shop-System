@@ -51,23 +51,8 @@ function AdminNavbar({ activeView, setActiveView }) {
           💬 Messages
         </div>
 
-        {/* SYSTEM */}
-        <div className="menu-divider"></div>
-        <div className="menu-section-title">SYSTEM</div>
-
-        <div
-          className={`menu-item ${activeView === "analysis" ? "active" : ""}`}
-          onClick={() => setActiveView("analysis")}
-        >
-          📊 Analysis
-        </div>
-
-        <div
-          className={`menu-item ${activeView === "settings" ? "active" : ""}`}
-          onClick={() => setActiveView("settings")}
-        >
-          ⚙️ Settings
-        </div>
+       
+        
 
       </div>
 

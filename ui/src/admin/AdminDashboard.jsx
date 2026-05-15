@@ -247,26 +247,10 @@ function AdminDashboard() {
         {activeView === "messages" && (
           <>
             <h1 className="admin-title">Messages</h1>
-            {/* AdminMessenger is now wired in here */}
             <AdminMessenger />
           </>
         )}
 
-        {/* ================= ANALYSIS ================= */}
-        {activeView === "analysis" && (
-          <>
-            <h1 className="admin-title">Analysis</h1>
-            <div className="admin-form-box">Analytics dashboard coming soon</div>
-          </>
-        )}
-
-        {/* ================= SETTINGS ================= */}
-        {activeView === "settings" && (
-          <>
-            <h1 className="admin-title">Settings</h1>
-            <div className="admin-form-box">Settings panel coming soon</div>
-          </>
-        )}
       </div>
 
       {/* ================= MODAL ================= */}
