@@ -7,9 +7,6 @@ const FIXED_CATEGORIES = [
   "Espresso",
   "Latte",
   "Tea",
-  "Pastries",
-  "Beans",
-  "Equipment",
 ];
 
 function AdminDashboard() {
