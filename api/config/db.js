@@ -5,15 +5,10 @@ const db = mysql.createConnection({
   user: "root",
   password: "",
   database: "coffee_shop_db"
-});
+}).promise();
 
-db.connect((err) => {
-  if (err) {
-    console.log("Database connection failed");
-    console.log(err);
-  } else {
-    console.log("MySQL Connected");
-  }
-});
+db.query("SELECT 1")
+  .then(() => console.log("MySQL Connected"))
+  .catch((err) => console.log("Database connection failed:", err));
 
 module.exports = db;

@@ -1,7 +1,11 @@
 import Navbar from "../components/Navbar";
 import "./Home.css";
+import Messenger from "../components/Messenger";
 
 function Home({ setUser }) {
+
+  const user = JSON.parse(localStorage.getItem("user"));
+
   return (
     <>
       <Navbar setUser={setUser} />
@@ -76,6 +80,9 @@ function Home({ setUser }) {
         </div>
 
       </div>
+
+      {/* 💬 REAL CHAT */}
+      <Messenger userId={user?.user_id} />
     </>
   );
 }
