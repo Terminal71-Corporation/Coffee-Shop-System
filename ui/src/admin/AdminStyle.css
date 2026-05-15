@@ -82,6 +82,30 @@
   color: #d4a055;
   padding-left: 11px;
 }
+
+/* ─────────────────────────────
+   LOGOUT
+───────────────────────────── */
+
+.admin-logout {
+  margin-top: auto;
+}
+
+.menu-divider {
+  border-top: 1px solid rgba(212, 160, 85, 0.15);
+  margin-bottom: 10px;
+}
+
+.menu-item.logout {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.menu-item.logout:hover {
+  color: #e74c3c;
+  background: rgba(231, 76, 60, 0.1);
+  transform: translateX(3px);
+}
+
 /* ─────────────────────────────
    SELECT DROPDOWN FIX
 ───────────────────────────── */
