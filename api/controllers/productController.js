@@ -1,118 +1,91 @@
 const db = require("../config/db");
 
-
 // =====================================
 // GET ALL PRODUCTS
 // =====================================
-const getProducts = (req, res) => {
-
-  const sql = `
-    SELECT *
-    FROM products
-    ORDER BY product_id DESC
-  `;
-
-  db.query(sql, (err, result) => {
-    if (err) {
-      return res.status(500).json({ message: "Failed to fetch products" });
-    }
+const getProducts = async (req, res) => {
+  try {
+    const [result] = await db.query(`
+      SELECT *
+      FROM products
+      ORDER BY product_id DESC
+    `);
     res.json(result);
-  });
-
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch products" });
+  }
 };
 
-
 // =====================================
-// GET SINGLE PRODUCT BY ID  ← THIS WAS MISSING
+// GET SINGLE PRODUCT BY ID
 // =====================================
-const getProductById = (req, res) => {
-
+const getProductById = async (req, res) => {
   const { id } = req.params;
+  try {
+    const [result] = await db.query(`
+      SELECT *
+      FROM products
+      WHERE product_id = ?
+    `, [id]);
 
-  const sql = `
-    SELECT *
-    FROM products
-    WHERE product_id = ?
-  `;
-
-  db.query(sql, [id], (err, result) => {
-    if (err) {
-      return res.status(500).json({ message: "Failed to fetch product" });
-    }
     if (result.length === 0) {
       return res.status(404).json({ message: "Product not found" });
     }
     res.json(result[0]);
-  });
-
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch product" });
+  }
 };
-
 
 // =====================================
 // ADD PRODUCT
 // =====================================
-const addProduct = (req, res) => {
-
+const addProduct = async (req, res) => {
   const { name, description, category, price, stock, image_url } = req.body;
+  try {
+    await db.query(`
+      INSERT INTO products (name, description, category, price, stock, image_url)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `, [name, description, category, price, stock, image_url]);
 
-  const sql = `
-    INSERT INTO products (name, description, category, price, stock, image_url)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `;
-
-  db.query(sql, [name, description, category, price, stock, image_url], (err, result) => {
-    if (err) {
-      return res.status(500).json({ message: "Failed to add product" });
-    }
     res.status(201).json({ message: "Product added successfully" });
-  });
-
+  } catch (err) {
+    res.status(500).json({ message: "Failed to add product" });
+  }
 };
-
 
 // =====================================
 // UPDATE PRODUCT
 // =====================================
-const updateProduct = (req, res) => {
-
+const updateProduct = async (req, res) => {
   const { id } = req.params;
   const { name, description, category, price, stock, image_url } = req.body;
+  try {
+    await db.query(`
+      UPDATE products
+      SET name = ?, description = ?, category = ?, price = ?, stock = ?, image_url = ?
+      WHERE product_id = ?
+    `, [name, description, category, price, stock, image_url, id]);
 
-  const sql = `
-    UPDATE products
-    SET name = ?, description = ?, category = ?, price = ?, stock = ?, image_url = ?
-    WHERE product_id = ?
-  `;
-
-  db.query(sql, [name, description, category, price, stock, image_url, id], (err, result) => {
-    if (err) {
-      console.log(err);
-      return res.status(500).json({ message: "Failed to update product" });
-    }
     res.json({ message: "Product updated successfully" });
-  });
-
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: "Failed to update product" });
+  }
 };
-
 
 // =====================================
 // DELETE PRODUCT
 // =====================================
-const deleteProduct = (req, res) => {
-
+const deleteProduct = async (req, res) => {
   const { id } = req.params;
-
-  const sql = `DELETE FROM products WHERE product_id = ?`;
-
-  db.query(sql, [id], (err, result) => {
-    if (err) {
-      return res.status(500).json({ message: "Failed to delete product" });
-    }
+  try {
+    await db.query(`DELETE FROM products WHERE product_id = ?`, [id]);
     res.json({ message: "Product deleted successfully" });
-  });
-
+  } catch (err) {
+    res.status(500).json({ message: "Failed to delete product" });
+  }
 };
-
 
 module.exports = {
   getProducts,

@@ -14,7 +14,6 @@ exports.sendMessage = async (req, res) => {
        VALUES (?, ?, ?)`,
       [sender_id, receiver_id, message]
     );
-
     res.json({ success: true });
   } catch (err) {
     res.status(500).json(err);
@@ -27,16 +26,13 @@ exports.getMessages = async (req, res) => {
 
   try {
     const [rows] = await db.query(
-      `
-      SELECT *
-      FROM messages
-      WHERE (sender_id = ? AND receiver_id = ?)
-         OR (sender_id = ? AND receiver_id = ?)
-      ORDER BY created_at ASC
-      `,
+      `SELECT *
+       FROM messages
+       WHERE (sender_id = ? AND receiver_id = ?)
+          OR (sender_id = ? AND receiver_id = ?)
+       ORDER BY created_at ASC`,
       [user1, user2, user2, user1]
     );
-
     res.json(rows);
   } catch (err) {
     res.status(500).json(err);
@@ -65,7 +61,6 @@ exports.getAdminChats = async (req, res) => {
       )
       ORDER BY m1.created_at DESC
     `);
-
     res.json(rows);
   } catch (err) {
     res.status(500).json(err);
@@ -92,7 +87,6 @@ exports.getAdminUsers = async (req, res) => {
        ORDER BY u.name ASC`,
       [adminId, adminId]
     );
-
     res.json(rows);
   } catch (err) {
     res.status(500).json(err);
@@ -108,7 +102,6 @@ exports.markAsRead = async (req, res) => {
       `UPDATE messages SET is_read = 1 WHERE message_id = ?`,
       [id]
     );
-
     res.json({ success: true });
   } catch (err) {
     res.status(500).json(err);
