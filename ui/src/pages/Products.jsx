@@ -112,6 +112,7 @@ function Products({ setUser }) {
                     <ProductCard
                       key={product.product_id}
                       product={product}
+                      showCategory={true}
                     />
                   ))}
                 </div>
@@ -139,6 +140,7 @@ function Products({ setUser }) {
                       <ProductCard
                         key={product.product_id}
                         product={product}
+                        showCategory={false}
                       />
                     ))}
                   </div>
@@ -167,6 +169,7 @@ function Products({ setUser }) {
                     <ProductCard
                       key={product.product_id}
                       product={product}
+                      showCategory={false}
                     />
                   ))}
                 </div>
@@ -180,7 +183,7 @@ function Products({ setUser }) {
   );
 }
 
-function ProductCard({ product }) {
+function ProductCard({ product, showCategory }) {
   const imageUrl =
     product.image_url && product.image_url.trim() !== ""
       ? product.image_url
@@ -221,7 +224,15 @@ function ProductCard({ product }) {
       />
       <div className="product-info">
         <h3>{product.name}</h3>
+
+        {showCategory && product.category && (
+          <span className="product-category-badge">
+            {product.category}
+          </span>
+        )}
+
         <p className="product-price">₱{product.price}</p>
+
         <div className="product-buttons">
           <button className="add-to-cart-btn" onClick={addToCart}>
             Add To Cart

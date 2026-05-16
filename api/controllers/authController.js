@@ -150,12 +150,37 @@ exports.login = (req, res) => {
         });
       }
 
+<<<<<<< HEAD
       // =========================
       // LOGIN SUCCESS
       // =========================
+=======
+<<<<<<< HEAD
+    db.query("SELECT * FROM users WHERE name=?", [username], async (err, result) => {
+        if (result.length === 0) {
+=======
+        db.query("SELECT * FROM users WHERE name=?", [username], async (err, result) => {
+>>>>>>> 666aa8ff0b9132823035d884f93740d5dba12996
 
       res.status(200).json({
 
+<<<<<<< HEAD
+=======
+        if (!result || result.length === 0) {
+>>>>>>> 3b0cb0b6129ac018c46d01f0a47b4341bfc85e2f
+            return res.json({ message: "User not found" });
+        }
+
+        const user = result[0];
+        const match = await bcrypt.compare(password, user.password);
+
+        if (!match) {
+            return res.json({ message: "Invalid password" });
+        }
+
+        // ✅ Return user info so the frontend can save it
+        res.json({ 
+>>>>>>> 666aa8ff0b9132823035d884f93740d5dba12996
         message: "Login success",
 
         user: {

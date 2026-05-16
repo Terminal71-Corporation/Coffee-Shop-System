@@ -80,6 +80,8 @@
   margin-bottom: 18px;
 }
 
+
+
 /* BUTTON AREA */
 .product-buttons {
   margin-top: auto;
@@ -164,4 +166,17 @@
     padding: 10px;
     font-size: .85rem;
   }
+}
+
+.product-category-badge {
+  display: inline-block;
+  background: #b8863c;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 20px;
+  margin-bottom: 6px;
 }
