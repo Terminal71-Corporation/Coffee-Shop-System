@@ -7,7 +7,13 @@ const db = mysql.createPool({
   database: "coffee_shop_db",
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
+
+  // =====================================
+  // THESE PREVENT STALE/DROPPED CONNECTIONS
+  // =====================================
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 0,
 });
 
 async function testDB() {
