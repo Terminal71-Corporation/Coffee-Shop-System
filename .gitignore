@@ -5,3 +5,4 @@ postman/
 ui/node_modules/
 api/node_modules/
 api/node_modules/.package-lock.json
+coffeeshopdatabase.sql
