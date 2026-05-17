@@ -8,10 +8,6 @@ const db = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-
-  // =====================================
-  // THESE PREVENT STALE/DROPPED CONNECTIONS
-  // =====================================
   enableKeepAlive: true,
   keepAliveInitialDelay: 0,
 });
