@@ -1,35 +1,65 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import logo1 from "./assets/logo1.png";
 
 function Register() {
   const [form, setForm] = useState({
     username: "",
     email: "",
     password: "",
-    confirm_password: ""
+    confirm_password: "",
   });
 
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const res = await fetch("http://localhost:5000/api/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form)
-    });
+    if (form.password !== form.confirm_password) {
+      setMessage("Passwords do not match");
+      return;
+    }
 
-    const data = await res.json();
-    setMessage(data.message);
+    try {
+      const res = await fetch("http://localhost:5000/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: form.username,
+          email: form.email,
+          password: form.password,
+        }),
+      });
 
-    if (data.message === "Registration successful") {
-      setTimeout(() => navigate("/login"), 1000);
+      const text = await res.text();
+
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (err) {
+        console.log("Server response not JSON:", text);
+        setMessage("Server error");
+        return;
+      }
+
+      setMessage(data.message);
+
+      if (data.message === "Registration successful") {
+        setTimeout(() => navigate("/login"), 1000);
+      }
+    } catch (error) {
+      console.log(error);
+      setMessage("Cannot connect to server");
     }
   };
 
@@ -38,6 +68,8 @@ function Register() {
       <div className="shader"></div>
 
       <div className="logointromod">
+        <img className="logointro" src={logo1} alt="logo" />
+
         <div className="register-box">
           <h2 className="register-title">Register</h2>
 
@@ -48,6 +80,7 @@ function Register() {
               name="username"
               type="text"
               placeholder="Username"
+              value={form.username}
               onChange={handleChange}
               required
             />
@@ -56,6 +89,7 @@ function Register() {
               name="email"
               type="email"
               placeholder="Email"
+              value={form.email}
               onChange={handleChange}
               required
             />
@@ -64,6 +98,7 @@ function Register() {
               name="password"
               type="password"
               placeholder="Password"
+              value={form.password}
               onChange={handleChange}
               required
             />
@@ -72,6 +107,7 @@ function Register() {
               name="confirm_password"
               type="password"
               placeholder="Confirm Password"
+              value={form.confirm_password}
               onChange={handleChange}
               required
             />

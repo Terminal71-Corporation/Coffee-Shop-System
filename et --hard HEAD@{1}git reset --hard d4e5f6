@@ -1,0 +1,81 @@
+[33mc265813[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfix[m[33m)[m Merge pull request #5 from Azhrock-Ryeo/fix
+[33mae2baa3[m updated auth controller, product controller, product routes, index.js, admindashboards, updated products.jsx
+[33m732bfee[m Merge pull request #4 from Azhrock-Ryeo/fix
+[33madb6736[m updated product
+[33mbab3399[m Updated App.jsx
+[33m454b7c1[m Merge pull request #3 from Azhrock-Ryeo/main
+[33mef344c5[m Merge branch 'fix' into main
+[33mde7e578[m Updated App.jsx and added admin dashboard
+[33mc040c1b[m added homepage
+[33m34c5e28[m adjust
+[33mfad4e8b[m[33m ([m[1;31morigin/azh[m[33m, [m[1;32mazh[m[33m)[m Merge pull request #1 from Azhrock-Ryeo/azh
+[33ma389627[m aaaa
+[33mafabf5d[m[33m ([m[1;32mmain[m[33m)[m re fix
+[33mfc88e8f[m login adjust
+[33m5048973[m[33m ([m[1;31morigin/my-fix[m[33m)[m fix: clean working version
+[33m080d171[m resolve merge conflicts
+[33m6629e10[m Merge branch 'main' of https://github.com/Azhrock-Ryeo/COFFEE-SHOP-SYSTEM into lolol
+[33m206402a[m Merge pull request #7 from Azhrock-Ryeo/revert-6-raccoon
+[33ma36d47e[m[33m ([m[1;31morigin/revert-6-raccoon[m[33m)[m Revert "Raccoon"
+[33m4885193[m Merge pull request #6 from Azhrock-Ryeo/raccoon
+[33mf20a3ad[m Merge pull request #5 from Azhrock-Ryeo/aldrsze
+[33me3aa690[m change
+[33m85a1335[m login w music
+[33m11722e0[m implement authentication routes and controller functions for user registration and login
+[33m051cea3[m Merge branch 'main' of https://github.com/Azhrock-Ryeo/COFFEE-SHOP-SYSTEM into aldrsze
+[33m8220d79[m implement CRUD product management routes and controller functions
+[33m10fac1c[m Merge pull request #2 from Azhrock-Ryeo/aldrsze
+[33mab984a8[m Merge pull request #3 from Azhrock-Ryeo/raccoon
+[33m4dc8f66[m update frontend
+[33m4498058[m Merge branch 'main' of https://github.com/Azhrock-Ryeo/COFFEE-SHOP-SYSTEM into aldrsze
+[33mdb73fd6[m add product
+[33m2c0ce90[m azh
+[33m90c04e6[m Merge pull request #1 from Azhrock-Ryeo/raccoon
+[33m64a87fc[m move
+[33me197514[m move
+[33m40c5f85[m organize folders
+[33me949214[m refac gitignore
+[33m1bd4b17[m LogIn
+[33m895e317[m first commit
+[33mb80d728[m Merge branch 'main' of https://github.com/KaiGosling/Coffee-Shop into bading
+[33m4f437dc[m Merge pull request #11 from KaiGosling/hitler
+[33mfb23f65[m frontendo
+[33mae4fa31[m delete
+[33m2567614[m frontend
+[33m614faae[m frontend2
+[33m7aeba8a[m bading
+[33m2d9d830[m Merge branch 'main' of https://github.com/KaiGosling/Coffee-Shop into bading
+[33m9f926a1[m bading
+[33md629d74[m Merge branch 'main' of https://github.com/KaiGosling/Coffee-Shop into bading
+[33me33d718[m Merge pull request #10 from KaiGosling/bading
+[33m6708e35[m fixed merge conflicts
+[33m208ee8f[m Merge pull request #9 from KaiGosling/Rolf
+[33m071318c[m NEW
+[33m9fe4d11[m Merge branch 'main' of https://github.com/KaiGosling/Coffee-Shop into azh
+[33me90843b[m NEW
+[33m1ff2e63[m Merge pull request #8 from KaiGosling/Rolf
+[33m877abf6[m MAIN
+[33m8b1bf50[m Resolved merge conflicts
+[33m92a4db2[m new
+[33m87b5500[m Create README.md
+[33m18b48ec[m git add .
+[33m6b99dc8[m ahh
+[33m27f3735[m azh
+[33mc0bbab7[m BAKLAAA SI AZHROCK
+[33m696d79e[m azh
+[33mcb16338[m azhrock bading
+[33m57acc14[m Merge pull request #6 from KaiGosling/Khaile
+[33m69bf57a[m add user
+[33m4af3384[m Merge pull request #5 from KaiGosling/azh
+[33m0c9a462[m Merge pull request #4 from KaiGosling/Khaile
+[33m87b5bf4[m bagong2
+[33m243a249[m Merge pull request #3 from KaiGosling/Khaile
+[33mb80430b[m azh
+[33m2ce3e34[m new
+[33mbe6bf78[m bagong
+[33m617f714[m asasc
+[33m8b9a370[m Merge pull request #2 from KaiGosling/azh
+[33m52aa4ea[m database
+[33ma603ebd[m Merge pull request #1 from KaiGosling/Rolf
+[33m07a0fbf[m Create login html
+[33mc62597f[m Initial commit

@@ -1,0 +1,376 @@
+/* ─────────────────────────────
+   GLOBAL LAYOUT
+───────────────────────────── */
+
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #1a1208;
+  font-family: "Georgia", serif;
+}
+
+/* ─────────────────────────────
+   SIDEBAR
+───────────────────────────── */
+
+.admin-navbar {
+  width: 260px;
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  background: rgba(255, 255, 255, 0.03);
+  border-right: 1px solid rgba(212, 160, 85, 0.15);
+
+  padding: 20px;
+  z-index: 100;
+}
+
+.admin-logo {
+  margin-bottom: 30px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid rgba(212, 160, 85, 0.15);
+}
+
+.admin-logo h2 {
+  color: #d4a055;
+  font-size: 1.4rem;
+  margin: 0;
+}
+
+.admin-logo p {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin-top: 5px;
+}
+
+.admin-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 20px;
+}
+
+/* NAV ITEMS */
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 12px 14px;
+  border-radius: 10px;
+
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+.menu-item:hover {
+  background: rgba(212, 160, 85, 0.1);
+  color: #d4a055;
+  transform: translateX(3px);
+}
+
+.menu-item.active {
+  background: rgba(212, 160, 85, 0.18);
+  border-left: 3px solid #d4a055;
+  color: #d4a055;
+  padding-left: 11px;
+}
+
+/* ─────────────────────────────
+   LOGOUT
+───────────────────────────── */
+
+.admin-logout {
+  margin-top: auto;
+}
+
+.menu-divider {
+  border-top: 1px solid rgba(212, 160, 85, 0.15);
+  margin-bottom: 10px;
+}
+
+.menu-item.logout {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.menu-item.logout:hover {
+  color: #e74c3c;
+  background: rgba(231, 76, 60, 0.1);
+  transform: translateX(3px);
+}
+
+/* ─────────────────────────────
+   SELECT DROPDOWN FIX
+───────────────────────────── */
+
+.admin-input option {
+  background: #1a1208;
+  color: #d4a055;
+}
+
+.admin-input select {
+  color: white;
+}
+
+/* ─────────────────────────────
+   CONTENT AREA
+───────────────────────────── */
+
+.admin-content {
+  margin-left: 260px;
+  flex: 1;
+  padding: 40px;
+  color: white;
+  overflow-y: auto;
+}
+
+/* ─────────────────────────────
+   TITLES
+───────────────────────────── */
+
+.admin-title {
+  color: #d4a055;
+  font-size: 2rem;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #b8863c;
+  padding-bottom: 10px;
+}
+
+.admin-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+/* ─────────────────────────────
+   FORM BOX (legacy support)
+───────────────────────────── */
+
+.admin-form-box {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 20px;
+  border-radius: 16px;
+  border: 1px solid rgba(212, 160, 85, 0.25);
+  backdrop-filter: blur(10px);
+  margin-bottom: 20px;
+}
+
+/* ─────────────────────────────
+   INPUTS
+───────────────────────────── */
+
+.admin-input {
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(212, 160, 85, 0.3);
+  background: rgba(255, 255, 255, 0.07);
+  color: white;
+  outline: none;
+}
+
+.admin-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.admin-input:focus {
+  border-color: #d4a055;
+  box-shadow: 0 0 0 3px rgba(212, 160, 85, 0.15);
+}
+
+/* ─────────────────────────────
+   BUTTONS
+───────────────────────────── */
+
+.admin-submit-btn {
+  border: none;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.2s;
+  margin-bottom: 20px;
+}
+
+.admin-submit-btn:hover {
+  transform: translateY(-2px);
+}
+
+.add-btn {
+  background: linear-gradient(135deg, #b8863c, #d4a055);
+}
+
+.edit-btn {
+  background: linear-gradient(135deg, #b8863c, #d4a055);
+  border: none;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-right: 8px;
+  cursor: pointer;
+}
+
+.delete-btn {
+  background: linear-gradient(135deg, #c0392b, #e74c3c);
+  border: none;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* ─────────────────────────────
+   TABLE
+───────────────────────────── */
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(212, 160, 85, 0.15);
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 14px 16px;
+  text-align: left;
+}
+
+.admin-table thead {
+  background: rgba(184, 134, 60, 0.2);
+}
+
+.admin-table th {
+  color: #d4a055;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+}
+
+.admin-table td {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.admin-table tbody tr:hover {
+  background: rgba(212, 160, 85, 0.06);
+}
+
+/* PRODUCT IMAGE */
+.table-image {
+  width: 45px;
+  height: 45px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid rgba(212, 160, 85, 0.25);
+}
+
+/* ─────────────────────────────
+   MODAL
+───────────────────────────── */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.modal-box {
+  width: 520px;
+  background: rgba(26, 18, 8, 0.95);
+  border: 1px solid rgba(212, 160, 85, 0.3);
+  border-radius: 16px;
+  padding: 24px;
+  backdrop-filter: blur(10px);
+}
+
+.modal-box h2 {
+  color: #d4a055;
+  margin-bottom: 16px;
+}
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modal-form input,
+.modal-form select {
+  background-color: #1a1208;
+  color: #ffffff;
+  border: 1px solid rgba(212, 160, 85, 0.3);
+  padding: 12px;
+  border-radius: 10px;
+  outline: none;
+
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.modal-form input:focus,
+.modal-form select:focus {
+  border-color: #d4a055;
+  box-shadow: 0 0 0 3px rgba(212, 160, 85, 0.15);
+}
+
+/* MODAL ACTIONS */
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.modal-actions button {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.modal-actions button:first-child {
+  background: linear-gradient(135deg, #b8863c, #d4a055);
+  color: white;
+}
+
+.modal-actions button:last-child {
+  background: #333;
+  color: white;
+}
+
+/* ─────────────────────────────
+   IMAGE PREVIEW
+───────────────────────────── */
+
+.preview-image {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin-top: 10px;
+  border: 1px solid rgba(212, 160, 85, 0.3);
+}
+
+/* ─────────────────────────────
+   EMPTY STATE
+───────────────────────────── */
+
+.no-products {
+  text-align: center;
+  padding: 30px;
+  color: rgba(255, 255, 255, 0.4);
+}

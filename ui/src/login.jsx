@@ -1,29 +1,61 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import logo1 from "./assets/logo1.png";
 
-function Login() {
-  const [form, setForm] = useState({ username: "", password: "" });
+function Login({ setUser }) {
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+  });
+
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const res = await fetch("http://localhost:5000/api/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form)
-    });
+    try {
+      const res = await fetch("http://localhost:5000/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: form.email,
+          password: form.password,
+        }),
+      });
 
-    const data = await res.json();
-    setMessage(data.message);
+      const text = await res.text();
 
-    if (data.message === "Login success") {
-      navigate("/"); // or dashboard later
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (err) {
+        console.log("Server response not JSON:", text);
+        setMessage("Server error");
+        return;
+      }
+
+      setMessage(data.message);
+
+      if (data.message === "Login success") {
+        localStorage.setItem("user", JSON.stringify(data.user));
+        localStorage.setItem("user_id", data.user.user_id);
+
+        setUser(data.user);
+        navigate("/home");
+      }
+    } catch (error) {
+      console.log(error);
+      setMessage("Cannot connect to server");
     }
   };
 
@@ -32,7 +64,8 @@ function Login() {
       <div className="shader"></div>
 
       <div className="logointromod">
-        
+        <img className="logointro" src={logo1} alt="logo" />
+
         <div className="register-box">
           <h2 className="register-title">Login</h2>
 
@@ -40,9 +73,10 @@ function Login() {
 
           <form onSubmit={handleSubmit}>
             <input
-              name="username"
-              type="text"
-              placeholder="Username"
+              name="email"
+              type="email"
+              placeholder="Email"
+              value={form.email}
               onChange={handleChange}
               required
             />
@@ -51,11 +85,12 @@ function Login() {
               name="password"
               type="password"
               placeholder="Password"
+              value={form.password}
               onChange={handleChange}
               required
             />
 
-            <input type="submit" value="Login" />
+            <input type="submit" value="LOGIN" />
           </form>
 
           <Link to="/register">Don't have an account?</Link>

@@ -1,16 +1,127 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Login from "./Login";
-import Register from "./Register";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useState, useRef, useEffect } from "react";
+
+import Login from "./login";
+import Register from "./register";
+import Home from "./pages/Home";
+import AdminDashboard from "./admin/AdminDashboard";
+import Products from "./pages/Products";
+import Profile from "./pages/Profile";
+import ItemPage from "./pages/ItemPage";
+import Cart from "./pages/Cart";
+import Orders from "./pages/Orders";
+import music from "./assets/music.mp3";
 
 function App() {
+  const [user, setUser] = useState(() =>
+    JSON.parse(localStorage.getItem("user"))
+  );
+
+  const audioRef = useRef(null);
+
+  useEffect(() => {
+    const enableAudio = async () => {
+      try {
+        if (audioRef.current) {
+          audioRef.current.volume = 0.3;
+          await audioRef.current.play();
+        }
+      } catch (err) {
+        console.log("Waiting for user interaction...");
+      }
+    };
+
+    const handleUserInteraction = () => {
+      enableAudio();
+      document.removeEventListener("click", handleUserInteraction);
+    };
+
+    document.addEventListener("click", handleUserInteraction);
+
+    return () => {
+      document.removeEventListener("click", handleUserInteraction);
+    };
+  }, []);
+
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-      </Routes>
-    </BrowserRouter>
+    <>
+      <audio ref={audioRef} loop>
+        <source src={music} type="audio/mpeg" />
+      </audio>
+
+      <BrowserRouter>
+        <Routes>
+
+          {/* DEFAULT */}
+          <Route path="/" element={<Navigate to="/login" />} />
+
+          {/* LOGIN */}
+          <Route
+            path="/login"
+            element={user ? <Navigate to="/home" /> : <Login setUser={setUser} />}
+          />
+
+          {/* REGISTER */}
+          <Route
+            path="/register"
+            element={user ? <Navigate to="/home" /> : <Register setUser={setUser} />}
+          />
+
+          {/* HOME */}
+          <Route
+            path="/home"
+            element={user ? <Home setUser={setUser} /> : <Navigate to="/login" />}
+          />
+
+          {/* PRODUCTS */}
+          <Route
+            path="/products"
+            element={user ? <Products setUser={setUser} /> : <Navigate to="/login" />}
+          />
+
+          {/* ITEM DETAIL — THIS WAS MISSING */}
+          <Route
+            path="/item/:id"
+            element={user ? <ItemPage setUser={setUser} /> : <Navigate to="/login" />}
+          />
+
+          {/* PROFILE */}
+          <Route
+            path="/profile"
+            element={user ? <Profile setUser={setUser} /> : <Navigate to="/login" />}
+          />
+
+          {/* CART */}
+          <Route
+            path="/cart"
+            element={user ? <Cart setUser={setUser} /> : <Navigate to="/login" />}
+          />
+
+          {/* ORDERS */}
+          <Route
+            path="/orders"
+            element={user ? <Orders setUser={setUser} /> : <Navigate to="/login" />}
+          />
+
+          {/* MESSAGES */}
+          <Route
+            path="/messages"
+            element={user ? (
+              <Navigate to="/home" />
+            ) : (
+              <Navigate to="/login" />
+            )}
+          />
+
+          {/* ADMIN */}
+          <Route path="/admin" element={<AdminDashboard />} />
+
+          {/* FALLBACK */}
+          <Route path="*" element={<Navigate to="/login" />} />
+
+        </Routes>
+      </BrowserRouter>
+    </>
   );
 }
 
