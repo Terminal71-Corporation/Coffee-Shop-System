@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import AdminNavbar from "./AdminNavbar";
+import AdminMessenger from "./AdminMessenger";
+import AdminOrdersBoard from "./AdminOrdersBoard";
 
 import "./AdminStyle.css";
-import AdminMessenger from "./AdminMessenger";
+import "./AdminOrdersBoard.css";
+
 const FIXED_CATEGORIES = [
   "Espresso",
   "Latte",
@@ -235,11 +238,11 @@ function AdminDashboard() {
           </>
         )}
 
-        {/* ================= ORDERS ================= */}
+        {/* ================= ORDERS (Trello Board) ================= */}
         {activeView === "orders" && (
           <>
-            <h1 className="admin-title">Orders</h1>
-            <div className="admin-form-box">Orders system coming soon</div>
+            <h1 className="admin-title">Orders Board</h1>
+            <AdminOrdersBoard />
           </>
         )}
 

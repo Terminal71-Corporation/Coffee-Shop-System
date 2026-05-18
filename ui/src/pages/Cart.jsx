@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import PaymentModal from "../components/PaymentModal";
 import "./Cart.css";
 
 function Cart({ setUser }) {
   const [cart, setCart] = useState([]);
+  const [showPayment, setShowPayment] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    loadCart();
-  }, []);
+  useEffect(() => { loadCart(); }, []);
 
   const loadCart = () => {
     const stored = JSON.parse(localStorage.getItem("cart")) || [];
@@ -41,21 +41,29 @@ function Cart({ setUser }) {
     }
   };
 
-  const checkoutAll = () => {
-    if (cart.length === 0) return;
+  // Called by PaymentModal with { fulfillment, paymentMethod, deliveryInfo }
+  const handlePaymentConfirm = ({ fulfillment, paymentMethod, deliveryInfo }) => {
     const now = new Date().toLocaleString();
+    // Pull logged-in user's name from localStorage session
+    const sessionUser = JSON.parse(localStorage.getItem("user") || "{}");
+    const customerName = sessionUser?.name || sessionUser?.email || "Guest";
     const newOrders = cart.map((item) => ({
       ...item,
       date: now,
       orderId: Date.now() + Math.random(),
       status: "ordered",
+      fulfillment,          // "counter" | "delivery"
+      paymentMethod,        // "cash" | "gcash" | "cod"
+      deliveryInfo,         // { name, phone, address, note } or null
+      customerName,         // logged-in user's display name
+      gcashPaid: paymentMethod === "gcash" ? false : null, // null = not gcash, false = gcash unpaid, true = gcash confirmed
     }));
     let orders = JSON.parse(localStorage.getItem("orders")) || [];
     orders = [...orders, ...newOrders];
     localStorage.setItem("orders", JSON.stringify(orders));
     localStorage.setItem("cart", JSON.stringify([]));
     setCart([]);
-    alert("All items checked out! Go to Orders to track.");
+    setShowPayment(false);
     navigate("/orders");
   };
 
@@ -72,9 +80,7 @@ function Cart({ setUser }) {
         <div className="cart-header">
           <h1>🛒 My Cart</h1>
           {cart.length > 0 && (
-            <button className="cart-clear-btn" onClick={clearCart}>
-              Clear All
-            </button>
+            <button className="cart-clear-btn" onClick={clearCart}>Clear All</button>
           )}
         </div>
 
@@ -89,12 +95,7 @@ function Cart({ setUser }) {
           <>
             <div className="cart-list">
               {cart.map((item) => (
-                <CartItem
-                  key={item.cartId}
-                  item={item}
-                  onRemove={removeItem}
-                  onQty={updateQty}
-                />
+                <CartItem key={item.cartId} item={item} onRemove={removeItem} onQty={updateQty} />
               ))}
             </div>
 
@@ -108,7 +109,7 @@ function Cart({ setUser }) {
                   <span>Total</span>
                   <span>₱{total.toFixed(2)}</span>
                 </div>
-                <button className="cart-checkout-btn" onClick={checkoutAll}>
+                <button className="cart-checkout-btn" onClick={() => setShowPayment(true)}>
                   Checkout All →
                 </button>
               </div>
@@ -116,6 +117,14 @@ function Cart({ setUser }) {
           </>
         )}
       </div>
+
+      {showPayment && (
+        <PaymentModal
+          total={total}
+          onConfirm={handlePaymentConfirm}
+          onClose={() => setShowPayment(false)}
+        />
+      )}
     </>
   );
 }
@@ -133,15 +142,11 @@ function CartItem({ item, onRemove, onQty }) {
       <img
         src={imageUrl}
         alt={item.name}
-        onError={(e) => {
-          e.target.src = "https://via.placeholder.com/100x100?text=Err";
-        }}
+        onError={(e) => { e.target.src = "https://via.placeholder.com/100x100?text=Err"; }}
       />
       <div className="cart-item-info">
         <h3>{item.name}</h3>
-        {item.addons && (
-          <p className="cart-item-addons">Add-ons: {item.addons}</p>
-        )}
+        {item.addons && <p className="cart-item-addons">Add-ons: {item.addons}</p>}
         <p className="cart-item-price">₱{item.price} each</p>
       </div>
       <div className="cart-item-controls">
@@ -151,12 +156,7 @@ function CartItem({ item, onRemove, onQty }) {
           <button onClick={() => onQty(item.cartId, 1)}>+</button>
         </div>
         <p className="cart-item-subtotal">₱{subtotal}</p>
-        <button
-          className="cart-remove-btn"
-          onClick={() => onRemove(item.cartId)}
-        >
-          Remove
-        </button>
+        <button className="cart-remove-btn" onClick={() => onRemove(item.cartId)}>Remove</button>
       </div>
     </div>
   );

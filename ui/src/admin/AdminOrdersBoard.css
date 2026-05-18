@@ -1,0 +1,410 @@
+/* ── Root ── */
+.aob-root {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  height: 100%;
+}
+
+/* ── Toolbar ── */
+.aob-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.aob-filter-group {
+  display: flex;
+  gap: 8px;
+}
+
+.aob-filter-btn {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.5);
+  padding: 8px 18px;
+  border-radius: 30px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: "Georgia", serif;
+  transition: all 0.2s;
+}
+.aob-filter-btn:hover {
+  color: white;
+  border-color: rgba(212,160,85,0.4);
+}
+.aob-filter-btn.active {
+  background: rgba(212,160,85,0.15);
+  border-color: rgba(212,160,85,0.5);
+  color: #d4a055;
+}
+
+.aob-total-pill {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.4);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* ── Board ── */
+.aob-board {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 16px;
+  align-items: flex-start;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212,160,85,0.3) transparent;
+}
+.aob-board::-webkit-scrollbar { height: 6px; }
+.aob-board::-webkit-scrollbar-track { background: transparent; }
+.aob-board::-webkit-scrollbar-thumb { background: rgba(212,160,85,0.3); border-radius: 3px; }
+
+/* ── Column ── */
+.aob-column {
+  flex: 0 0 270px;
+  min-width: 270px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--col-border);
+  border-top: 3px solid var(--col-color);
+  border-radius: 14px;
+  padding: 14px 12px;
+  transition: background 0.2s, box-shadow 0.2s;
+  min-height: 200px;
+}
+
+.aob-column--over {
+  background: var(--col-bg);
+  box-shadow: 0 0 0 2px var(--col-color), 0 8px 32px var(--col-glow);
+}
+
+/* Column header */
+.aob-col-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+
+.aob-col-icon { font-size: 1rem; }
+
+.aob-col-label {
+  color: var(--col-color);
+  font-weight: 700;
+  font-size: 0.88rem;
+  flex: 1;
+  letter-spacing: 0.02em;
+}
+
+.aob-col-count {
+  background: var(--col-bg);
+  border: 1px solid var(--col-border);
+  color: var(--col-color);
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 20px;
+  min-width: 22px;
+  text-align: center;
+}
+
+/* Drop hint */
+.aob-drop-hint {
+  border: 2px dashed var(--col-color);
+  border-radius: 10px;
+  padding: 12px;
+  text-align: center;
+  color: var(--col-color);
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  opacity: 0.7;
+  animation: aob-pulse 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes aob-pulse {
+  from { opacity: 0.5; }
+  to   { opacity: 1; }
+}
+
+/* Empty col */
+.aob-empty-col {
+  text-align: center;
+  color: rgba(255,255,255,0.18);
+  font-size: 0.82rem;
+  padding: 24px 0;
+  font-style: italic;
+}
+
+/* Cards container */
+.aob-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── Card ── */
+.aob-card {
+  background: rgba(20,14,6,0.85);
+  border: 1px solid var(--col-border);
+  border-radius: 12px;
+  padding: 12px;
+  cursor: grab;
+  position: relative;
+  transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+  animation: aob-card-in 0.22s ease;
+}
+
+@keyframes aob-card-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.aob-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.4), 0 0 0 1px var(--col-color);
+}
+
+.aob-card--dragging {
+  opacity: 0.35;
+  cursor: grabbing;
+  transform: scale(0.97);
+}
+
+/* Customer name */
+.aob-customer-name {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: white;
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  padding: 5px 8px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 6px;
+}
+
+.aob-customer-icon {
+  font-size: 0.78rem;
+  opacity: 0.7;
+}
+
+/* GCash payment status toggle */
+.aob-gcash-status {
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: "Georgia", serif;
+  transition: all 0.2s;
+  text-align: center;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.aob-gcash-status--unpaid {
+  background: rgba(231,76,60,0.1);
+  border-color: rgba(231,76,60,0.35);
+  color: #e74c3c;
+}
+.aob-gcash-status--unpaid:hover {
+  background: rgba(231,76,60,0.2);
+}
+
+.aob-gcash-status--paid {
+  background: rgba(39,174,96,0.12);
+  border-color: rgba(39,174,96,0.35);
+  color: #2ecc71;
+}
+.aob-gcash-status--paid:hover {
+  background: rgba(39,174,96,0.22);
+}
+
+/* Drag handle */
+.aob-drag-handle {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  color: rgba(255,255,255,0.2);
+  font-size: 1rem;
+  cursor: grab;
+  line-height: 1;
+  letter-spacing: -1px;
+  transition: color 0.2s;
+}
+.aob-card:hover .aob-drag-handle { color: rgba(255,255,255,0.45); }
+
+/* Card top row */
+.aob-card-top {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-bottom: 10px;
+  padding-right: 18px;
+}
+
+.aob-card-img {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid rgba(212,160,85,0.2);
+  flex-shrink: 0;
+}
+
+.aob-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.aob-card-name {
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0 0 2px;
+}
+
+.aob-card-addons {
+  color: rgba(255,255,255,0.38);
+  font-size: 0.75rem;
+  margin: 0 0 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.aob-card-subtotal {
+  color: #d4a055;
+  font-size: 0.88rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.aob-card-qty {
+  color: rgba(255,255,255,0.35);
+  font-weight: 400;
+  font-size: 0.78rem;
+}
+
+/* Badges */
+.aob-card-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.aob-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.5);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.aob-badge--counter {
+  color: #27ae60;
+  background: rgba(39,174,96,0.1);
+  border-color: rgba(39,174,96,0.25);
+}
+
+.aob-badge--delivery {
+  color: #3498db;
+  background: rgba(52,152,219,0.1);
+  border-color: rgba(52,152,219,0.25);
+}
+
+/* Date */
+.aob-card-date {
+  color: rgba(255,255,255,0.25);
+  font-size: 0.72rem;
+  margin: 0 0 8px;
+}
+
+/* Expand button */
+.aob-expand-btn {
+  background: none;
+  border: none;
+  color: rgba(212,160,85,0.65);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 6px;
+  font-family: "Georgia", serif;
+  transition: color 0.2s;
+  display: block;
+}
+.aob-expand-btn:hover { color: #d4a055; }
+
+/* Delivery info */
+.aob-card-delivery {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.aob-delivery-row {
+  display: flex;
+  gap: 8px;
+  font-size: 0.78rem;
+}
+.aob-delivery-row span:first-child {
+  color: rgba(255,255,255,0.3);
+  font-weight: 600;
+  min-width: 48px;
+  flex-shrink: 0;
+}
+.aob-delivery-row span:last-child {
+  color: rgba(255,255,255,0.7);
+  line-height: 1.4;
+}
+
+/* Advance button */
+.aob-advance-btn {
+  width: 100%;
+  background: var(--col-bg);
+  border: 1px solid var(--col-border);
+  color: var(--col-color);
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: "Georgia", serif;
+  transition: all 0.2s;
+  text-align: center;
+  margin-top: 4px;
+}
+.aob-advance-btn:hover {
+  background: var(--col-color);
+  color: #1a1208;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--col-glow);
+}
