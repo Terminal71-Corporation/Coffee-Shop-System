@@ -54,6 +54,15 @@ const COLUMNS = [
     colorGlow: "rgba(26,188,156,0.18)",
     onlyFor: "counter",
   },
+  {
+    key: "voided",
+    label: "Voided",
+    icon: "🚫",
+    color: "#e74c3c",
+    colorBg: "rgba(231,76,60,0.10)",
+    colorBorder: "rgba(231,76,60,0.25)",
+    colorGlow: "rgba(231,76,60,0.18)",
+  },
 ];
 
 const PAYMENT_META = {
@@ -64,6 +73,7 @@ const PAYMENT_META = {
 
 // ── Helpers ───────────────────────────────────────────────────────
 function getNextStatus(order) {
+  if (order.status === "voided") return null;
   const flow = order.fulfillment === "delivery" ? DELIVERY_FLOW : COUNTER_FLOW;
   const idx = flow.indexOf(order.status);
   return idx >= 0 && idx < flow.length - 1 ? flow[idx + 1] : null;
@@ -89,6 +99,7 @@ export default function AdminOrdersBoard() {
   const [dragOver, setDragOver] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
   const [filter, setFilter] = useState("all"); // all | counter | delivery
+  const [voidConfirmId, setVoidConfirmId] = useState(null); // order pending void confirmation
   const dragItem = useRef(null);
 
   useEffect(() => {
@@ -106,6 +117,25 @@ export default function AdminOrdersBoard() {
     setOrders(updated);
     saveOrders(updated);
   };
+
+  // ── Void / Cancel order ──
+  const voidOrder = (orderId) => {
+    setVoidConfirmId(orderId);
+  };
+
+  const confirmVoid = () => {
+    if (!voidConfirmId) return;
+    const updated = orders.map((o) =>
+      String(o.orderId) === String(voidConfirmId)
+        ? { ...o, status: "voided", voidedAt: new Date().toLocaleString() }
+        : o
+    );
+    setOrders(updated);
+    saveOrders(updated);
+    setVoidConfirmId(null);
+  };
+
+  const cancelVoid = () => setVoidConfirmId(null);
 
   // ── Toggle GCash payment confirmed ──
   const toggleGcashPaid = (orderId) => {
@@ -135,7 +165,7 @@ export default function AdminOrdersBoard() {
     setDragId(null);
     if (!dragItem.current) return;
     const order = dragItem.current;
-    // Only allow valid moves in the order's flow
+    if (order.status === "voided" || colKey === "voided") return; // can't drag to/from voided
     const flow = order.fulfillment === "delivery" ? DELIVERY_FLOW : COUNTER_FLOW;
     if (!flow.includes(colKey)) return;
     if (order.status === colKey) return;
@@ -166,8 +196,41 @@ export default function AdminOrdersBoard() {
     return true;
   });
 
+  const pendingVoidOrder = voidConfirmId
+    ? orders.find((o) => String(o.orderId) === String(voidConfirmId))
+    : null;
+
   return (
     <div className="aob-root">
+
+      {/* ── Void Confirm Modal ── */}
+      {voidConfirmId && pendingVoidOrder && (
+        <div className="aob-void-overlay">
+          <div className="aob-void-modal">
+            <div className="aob-void-icon">🚫</div>
+            <h3>Void Order?</h3>
+            <p className="aob-void-order-num">
+              {pendingVoidOrder.orderNumber || `#${String(pendingVoidOrder.orderId).slice(-5)}`}
+            </p>
+            <p className="aob-void-customer">
+              {pendingVoidOrder.customerName && (
+                <><span>👤</span> {pendingVoidOrder.customerName}</>
+              )}
+            </p>
+            <p className="aob-void-warning">
+              This will cancel the order and notify the customer. This action cannot be undone.
+            </p>
+            <div className="aob-void-actions">
+              <button className="aob-void-confirm-btn" onClick={confirmVoid}>
+                Yes, Void Order
+              </button>
+              <button className="aob-void-cancel-btn" onClick={cancelVoid}>
+                Keep Order
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Toolbar ── */}
       <div className="aob-toolbar">
@@ -239,6 +302,7 @@ export default function AdminOrdersBoard() {
                       if (next) updateStatus(order.orderId, next);
                     }}
                     onToggleGcash={() => toggleGcashPaid(order.orderId)}
+                    onVoid={() => voidOrder(order.orderId)}
                     onDragStart={onDragStart}
                     onDragEnd={onDragEnd}
                   />
@@ -253,53 +317,90 @@ export default function AdminOrdersBoard() {
 }
 
 // ── Order Card ────────────────────────────────────────────────────
-function OrderCard({ order, col, isDragging, expanded, onToggle, onAdvance, onToggleGcash, onDragStart, onDragEnd }) {
+function OrderCard({ order, col, isDragging, expanded, onToggle, onAdvance, onToggleGcash, onVoid, onDragStart, onDragEnd }) {
   const next = getNextStatus(order);
   const nextLabel = next ? getNextLabel(next) : null;
   const payment = PAYMENT_META[order.paymentMethod] || null;
-  const subtotal = (parseFloat(order.price || 0) * (order.quantity || 1)).toFixed(2);
+  const isVoided = order.status === "voided";
+
+  // Support both grouped items[] and legacy single-item orders
+  const items = order.items || [{
+    name: order.name,
+    price: order.price,
+    quantity: order.quantity,
+    image_url: order.image_url,
+    addons: order.addons,
+  }];
+
+  const grandTotal = order.total
+    ? parseFloat(order.total).toFixed(2)
+    : items.reduce((sum, item) => sum + parseFloat(item.price || 0) * (item.quantity || 1), 0).toFixed(2);
+
   const isGcash = order.paymentMethod === "gcash";
   const gcashPaid = order.gcashPaid === true;
 
-  const imgSrc =
-    order.image_url && order.image_url.trim()
-      ? order.image_url
-      : "https://via.placeholder.com/48x48?text=?";
-
   return (
     <div
-      className={`aob-card ${isDragging ? "aob-card--dragging" : ""}`}
-      draggable
-      onDragStart={(e) => onDragStart(e, order)}
+      className={`aob-card ${isDragging ? "aob-card--dragging" : ""} ${isVoided ? "aob-card--voided" : ""}`}
+      draggable={!isVoided}
+      onDragStart={(e) => !isVoided && onDragStart(e, order)}
       onDragEnd={onDragEnd}
       style={{ "--col-color": col.color, "--col-border": col.colorBorder, "--col-bg": col.colorBg }}
     >
       {/* Drag handle */}
-      <div className="aob-drag-handle" title="Drag to move">⠿</div>
+      {!isVoided && <div className="aob-drag-handle" title="Drag to move">⠿</div>}
 
-      {/* Customer name */}
-      {order.customerName && (
-        <div className="aob-customer-name">
-          <span className="aob-customer-icon">👤</span>
-          {order.customerName}
-        </div>
+      {/* Void ribbon */}
+      {isVoided && (
+        <div className="aob-void-ribbon">🚫 VOIDED</div>
       )}
 
-      {/* Card top */}
-      <div className="aob-card-top">
-        <img
-          src={imgSrc}
-          className="aob-card-img"
-          alt={order.name}
-          onError={(e) => { e.target.src = "https://via.placeholder.com/48x48?text=?"; }}
-        />
-        <div className="aob-card-info">
-          <p className="aob-card-name">{order.name}</p>
-          {order.addons && (
-            <p className="aob-card-addons">+{order.addons}</p>
-          )}
-          <p className="aob-card-subtotal">₱{subtotal} <span className="aob-card-qty">×{order.quantity || 1}</span></p>
-        </div>
+      {/* Order number + customer */}
+      <div className="aob-card-header-row">
+        {order.orderNumber && (
+          <span className="aob-order-number">{order.orderNumber}</span>
+        )}
+        {order.customerName && (
+          <div className="aob-customer-name">
+            <span className="aob-customer-icon">👤</span>
+            {order.customerName}
+          </div>
+        )}
+      </div>
+
+      {/* Items list */}
+      <div className="aob-items-list">
+        {items.map((item, idx) => {
+          const imgSrc =
+            item.image_url && item.image_url.trim()
+              ? item.image_url
+              : "https://via.placeholder.com/40x40?text=?";
+          const subtotal = (parseFloat(item.price || 0) * (item.quantity || 1)).toFixed(2);
+
+          return (
+            <div key={item.cartId || idx} className="aob-item-row">
+              <img
+                src={imgSrc}
+                className="aob-card-img"
+                alt={item.name}
+                onError={(e) => { e.target.src = "https://via.placeholder.com/40x40?text=?"; }}
+              />
+              <div className="aob-card-info">
+                <p className="aob-card-name">{item.name}</p>
+                {item.addons && <p className="aob-card-addons">+{item.addons}</p>}
+                <p className="aob-card-subtotal">
+                  ₱{subtotal} <span className="aob-card-qty">×{item.quantity || 1}</span>
+                </p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Grand total */}
+      <div className="aob-card-grand-total">
+        <span>Total</span>
+        <span>₱{grandTotal}</span>
       </div>
 
       {/* Badges */}
@@ -315,7 +416,7 @@ function OrderCard({ order, col, isDragging, expanded, onToggle, onAdvance, onTo
       </div>
 
       {/* GCash payment status */}
-      {isGcash && (
+      {isGcash && !isVoided && (
         <button
           className={`aob-gcash-status ${gcashPaid ? "aob-gcash-status--paid" : "aob-gcash-status--unpaid"}`}
           onClick={onToggleGcash}
@@ -329,6 +430,11 @@ function OrderCard({ order, col, isDragging, expanded, onToggle, onAdvance, onTo
 
       {/* Date */}
       <p className="aob-card-date">{order.date}</p>
+      {isVoided && order.voidedAt && (
+        <p className="aob-card-date" style={{ color: "rgba(231,76,60,0.6)" }}>
+          Voided: {order.voidedAt}
+        </p>
+      )}
 
       {/* Delivery expand */}
       {order.fulfillment === "delivery" && order.deliveryInfo && (
@@ -347,11 +453,18 @@ function OrderCard({ order, col, isDragging, expanded, onToggle, onAdvance, onTo
         </div>
       )}
 
-      {/* Advance button */}
-      {nextLabel && (
-        <button className="aob-advance-btn" onClick={onAdvance}>
-          {nextLabel} →
-        </button>
+      {/* Action buttons */}
+      {!isVoided && (
+        <div className="aob-card-actions">
+          {nextLabel && (
+            <button className="aob-advance-btn" onClick={onAdvance}>
+              {nextLabel} →
+            </button>
+          )}
+          <button className="aob-void-btn" onClick={onVoid} title="Cancel / Void this order">
+            🚫 Void Order
+          </button>
+        </div>
       )}
     </div>
   );

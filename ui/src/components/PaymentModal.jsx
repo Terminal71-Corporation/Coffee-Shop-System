@@ -32,8 +32,6 @@ const FULFILLMENT_OPTIONS = [
   },
 ];
 
-// Counter → Cash to Counter | GCash (in-store scan)
-// Delivery → Cash on Delivery | GCash (online transfer)
 const PAYMENT_METHODS = {
   counter: [
     {
@@ -77,16 +75,16 @@ const PAYMENT_METHODS = {
   ],
 };
 
-// step flow:
-//   counter:  fulfillment → payment → [gcash-qr]
-//   delivery: fulfillment → address → payment → [gcash-qr]
-
 function PaymentModal({ total, onConfirm, onClose }) {
   const [step, setStep] = useState("fulfillment");
   const [fulfillment, setFulfillment] = useState(null);
   const [form, setForm] = useState({ name: "", phone: "", address: "", note: "" });
   const [errors, setErrors] = useState({});
   const [paymentMethod, setPaymentMethod] = useState(null);
+
+  // GCash reference number state
+  const [gcashRef, setGcashRef] = useState("");
+  const [gcashRefError, setGcashRefError] = useState("");
 
   const STEP_TITLES = {
     fulfillment: "How to Receive?",
@@ -106,6 +104,7 @@ function PaymentModal({ total, onConfirm, onClose }) {
     if (prev) {
       setStep(prev);
       if (prev === "fulfillment") setPaymentMethod(null);
+      if (prev === "payment") { setGcashRef(""); setGcashRefError(""); }
     }
   };
 
@@ -137,21 +136,41 @@ function PaymentModal({ total, onConfirm, onClose }) {
   const handlePaymentNext = () => {
     if (!paymentMethod) return;
     if (paymentMethod === "gcash") {
+      setGcashRef("");
+      setGcashRefError("");
       setStep("gcash-qr");
     } else {
       onConfirm({
         fulfillment,
         paymentMethod,
         deliveryInfo: fulfillment === "delivery" ? form : null,
+        gcashRef: null,
       });
     }
   };
 
+  const validateGcashRef = () => {
+    const cleaned = gcashRef.trim();
+    if (!cleaned) {
+      setGcashRefError("Please enter your GCash reference number");
+      return false;
+    }
+    // GCash reference numbers are typically 13 digits
+    if (!/^\d{10,15}$/.test(cleaned)) {
+      setGcashRefError("Reference number must be 10–15 digits (e.g. 3040932915371)");
+      return false;
+    }
+    setGcashRefError("");
+    return true;
+  };
+
   const handleGcashPaid = () => {
+    if (!validateGcashRef()) return;
     onConfirm({
       fulfillment,
       paymentMethod: "gcash",
       deliveryInfo: fulfillment === "delivery" ? form : null,
+      gcashRef: gcashRef.trim(),
     });
   };
 
@@ -350,7 +369,7 @@ function PaymentModal({ total, onConfirm, onClose }) {
         )}
 
         {/* ══════════════════════════════════════
-            STEP 4 — GCash QR
+            STEP 4 — GCash QR + Reference Number
         ══════════════════════════════════════ */}
         {step === "gcash-qr" && (
           <div className="pm-gcash">
@@ -378,7 +397,7 @@ function PaymentModal({ total, onConfirm, onClose }) {
                 "Open your GCash app",
                 <span key="s2">Tap <strong>Pay QR</strong> and scan the code above</span>,
                 <span key="s3">Enter amount: <strong>₱{total.toFixed(2)}</strong></span>,
-                <span key="s4">Tap <strong>"I've Paid"</strong> below once done</span>,
+                <span key="s4">Enter your <strong>GCash Reference Number</strong> below after paying</span>,
               ].map((text, i) => (
                 <div className="pm-gcash-step" key={i}>
                   <span className="pm-gcash-num">{i + 1}</span>
@@ -387,9 +406,45 @@ function PaymentModal({ total, onConfirm, onClose }) {
               ))}
             </div>
 
-            <button className="pm-confirm-btn pm-gcash-paid-btn" onClick={handleGcashPaid}>
-              ✓ I've Paid via GCash
+            {/* ── Reference Number Input ── */}
+            <div className="pm-gcash-ref-block">
+              <label className="pm-gcash-ref-label">
+                📋 GCash Reference Number
+              </label>
+              <p className="pm-gcash-ref-hint">
+                Found in your GCash transaction receipt (13-digit number)
+              </p>
+              <input
+                className={`pm-field-input pm-gcash-ref-input ${gcashRefError ? "error" : gcashRef.trim().length > 0 ? "valid" : ""}`}
+                type="text"
+                inputMode="numeric"
+                placeholder="e.g. 3040932915371"
+                value={gcashRef}
+                maxLength={15}
+                onChange={(e) => {
+                  // Only allow digits
+                  const val = e.target.value.replace(/\D/g, "");
+                  setGcashRef(val);
+                  if (gcashRefError) setGcashRefError("");
+                }}
+              />
+              {gcashRefError && <span className="pm-field-error">{gcashRefError}</span>}
+              {!gcashRefError && gcashRef.trim().length >= 10 && (
+                <span className="pm-gcash-ref-ok">✓ Reference number looks good</span>
+              )}
+            </div>
+
+            <button
+              className="pm-confirm-btn pm-gcash-paid-btn"
+              onClick={handleGcashPaid}
+              disabled={gcashRef.trim().length < 10}
+            >
+              ✓ I've Paid — Submit Reference Number
             </button>
+
+            <p className="pm-gcash-disclaimer">
+              Our admin will manually verify your payment using this reference number before processing your order.
+            </p>
           </div>
         )}
 

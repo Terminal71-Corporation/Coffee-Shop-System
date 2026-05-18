@@ -7,7 +7,9 @@ const STATUS_LABELS = {
   ordered:    { label: "Order Placed",        color: "#d4a055", bg: "rgba(212,160,85,0.15)" },
   ready:      { label: "Ready for Pick-up",   color: "#27ae60", bg: "rgba(39,174,96,0.15)" },
   delivering: { label: "Delivering",           color: "#3498db", bg: "rgba(52,152,219,0.15)" },
-  shipped:    { label: "Shipped / Received",   color: "#3cb371", bg: "rgba(46,139,87,0.15)" },
+  shipped:    { label: "Shipped / Received",   color: "#9b59b6", bg: "rgba(155,89,182,0.15)" },
+  completed:  { label: "Completed",            color: "#1abc9c", bg: "rgba(26,188,156,0.15)" },
+  voided:     { label: "Voided",               color: "#e74c3c", bg: "rgba(231,76,60,0.15)" },
 };
 
 const PAYMENT_LABELS = {
@@ -21,13 +23,14 @@ const FULFILLMENT_LABELS = {
   delivery: { label: "Delivery",        icon: "🚚" },
 };
 
-// Tabs: counter orders show "ready" instead of "delivering"
 const TABS = [
   { key: "all",        label: "All Orders" },
   { key: "ordered",    label: "Order Placed" },
   { key: "ready",      label: "Ready for Pick-up" },
   { key: "delivering", label: "Delivering" },
   { key: "shipped",    label: "Shipped / Received" },
+  { key: "completed",  label: "Completed" },
+  { key: "voided",     label: "Voided" },
 ];
 
 function Orders({ setUser }) {
@@ -56,8 +59,6 @@ function Orders({ setUser }) {
 
   const filtered =
     filter === "all" ? orders : orders.filter((o) => o.status === filter);
-
-
 
   return (
     <>
@@ -104,83 +105,112 @@ function Orders({ setUser }) {
 function OrderCard({ order }) {
   const [expanded, setExpanded] = useState(false);
 
-  const imageUrl =
-    order.image_url && order.image_url.trim() !== ""
-      ? order.image_url
-      : "https://via.placeholder.com/90x90?text=No+Image";
+  // Support both old (single-item) and new (grouped items[]) format
+  const items = order.items || [{
+    cartId: order.cartId,
+    name: order.name,
+    price: order.price,
+    quantity: order.quantity,
+    image_url: order.image_url,
+    addons: order.addons,
+  }];
 
-  const status      = STATUS_LABELS[order.status]         || STATUS_LABELS.ordered;
-  const payment     = PAYMENT_LABELS[order.paymentMethod]  || null;
-  const fulfillment = FULFILLMENT_LABELS[order.fulfillment] || null;
-  const subtotal    = (parseFloat(order.price) * (order.quantity || 1)).toFixed(2);
+  const status      = STATUS_LABELS[order.status]          || STATUS_LABELS.ordered;
+  const payment     = PAYMENT_LABELS[order.paymentMethod]   || null;
+  const fulfillment = FULFILLMENT_LABELS[order.fulfillment]  || null;
   const hasDelivery = order.fulfillment === "delivery" && order.deliveryInfo;
-
-  // Show a pick-up reminder when status is "ready" and fulfillment is counter
   const showPickupNote = order.status === "ready" && order.fulfillment === "counter";
+  const isVoided    = order.status === "voided";
+
+  const grandTotal = order.total
+    ? parseFloat(order.total).toFixed(2)
+    : items.reduce((sum, item) => sum + parseFloat(item.price) * (item.quantity || 1), 0).toFixed(2);
 
   return (
-    <div className="order-card">
-      <div className="order-card-main">
-        <img
-          src={imageUrl}
-          alt={order.name}
-          onError={(e) => { e.target.src = "https://via.placeholder.com/90x90?text=Err"; }}
-        />
-        <div className="order-info">
-          <div className="order-info-top">
-            <h3>{order.name}</h3>
-            <span
-              className="order-status-badge"
-              style={{ color: status.color, background: status.bg }}
-            >
-              {status.label}
-            </span>
-          </div>
-
-          {order.addons && <p className="order-addons">Add-ons: {order.addons}</p>}
-
-          <div className="order-badges">
-            {fulfillment && (
-              <span className="order-fulfillment-badge">
-                {fulfillment.icon} {fulfillment.label}
-              </span>
-            )}
-            {payment && (
-              <span
-                className="order-payment-badge"
-                style={{ color: payment.color, background: payment.bg }}
-              >
-                {payment.icon} {payment.label}
-              </span>
-            )}
-          </div>
-
-          {/* Pick-up reminder pill */}
-          {showPickupNote && (
-            <div className="order-pickup-note">
-              🏪 Your order is ready! Please proceed to the counter to pick up and pay.
-            </div>
-          )}
-
-          <p className="order-date">{order.date}</p>
-
-          {hasDelivery && (
-            <button
-              className="order-expand-btn"
-              onClick={() => setExpanded((p) => !p)}
-            >
-              {expanded ? "▲ Hide details" : "▼ Delivery details"}
-            </button>
-          )}
+    <div className={`order-card ${isVoided ? "order-card--voided" : ""}`}>
+      {/* ── Transaction Header ── */}
+      <div className="order-txn-header">
+        <div className="order-txn-left">
+          <span className="order-number">{order.orderNumber || "—"}</span>
+          <span className="order-txn-date">{order.date}</span>
         </div>
-
-        <div className="order-right">
-          <p className="order-qty">×{order.quantity || 1}</p>
-          <p className="order-subtotal">₱{subtotal}</p>
+        <div className="order-txn-right">
+          <span
+            className="order-status-badge"
+            style={{ color: status.color, background: status.bg }}
+          >
+            {status.label}
+          </span>
         </div>
       </div>
 
-      {/* Expandable delivery info */}
+      {/* ── Badges row ── */}
+      <div className="order-badges" style={{ padding: "0 0 10px" }}>
+        {fulfillment && (
+          <span className="order-fulfillment-badge">
+            {fulfillment.icon} {fulfillment.label}
+          </span>
+        )}
+        {payment && (
+          <span
+            className="order-payment-badge"
+            style={{ color: payment.color, background: payment.bg }}
+          >
+            {payment.icon} {payment.label}
+          </span>
+        )}
+      </div>
+
+      {/* ── Pick-up note ── */}
+      {showPickupNote && (
+        <div className="order-pickup-note">
+          🏪 Your order is ready! Please proceed to the counter to pick up and pay.
+        </div>
+      )}
+
+      {/* ── Items list ── */}
+      <div className="order-items-list">
+        {items.map((item, idx) => {
+          const imageUrl =
+            item.image_url && item.image_url.trim() !== ""
+              ? item.image_url
+              : "https://via.placeholder.com/70x70?text=?";
+          const subtotal = (parseFloat(item.price) * (item.quantity || 1)).toFixed(2);
+
+          return (
+            <div key={item.cartId || idx} className="order-item-row">
+              <img
+                src={imageUrl}
+                alt={item.name}
+                onError={(e) => { e.target.src = "https://via.placeholder.com/70x70?text=Err"; }}
+              />
+              <div className="order-item-info">
+                <span className="order-item-name">{item.name}</span>
+                {item.addons && <span className="order-addons">Add-ons: {item.addons}</span>}
+                <span className="order-item-price">₱{item.price} × {item.quantity || 1}</span>
+              </div>
+              <span className="order-item-subtotal">₱{subtotal}</span>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ── Grand Total ── */}
+      <div className="order-grand-total">
+        <span>Total</span>
+        <span>₱{grandTotal}</span>
+      </div>
+
+      {/* ── Delivery expand ── */}
+      {hasDelivery && (
+        <button
+          className="order-expand-btn"
+          onClick={() => setExpanded((p) => !p)}
+        >
+          {expanded ? "▲ Hide delivery details" : "▼ Delivery details"}
+        </button>
+      )}
+
       {expanded && hasDelivery && (
         <div className="order-delivery-info">
           <div className="order-delivery-row">

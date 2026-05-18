@@ -6,6 +6,131 @@
   height: 100%;
 }
 
+/* ── Void Confirm Modal ── */
+.aob-void-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: aob-fade-in 0.18s ease;
+}
+
+@keyframes aob-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.aob-void-modal {
+  background: #1a1208;
+  border: 1px solid rgba(231, 76, 60, 0.35);
+  border-radius: 18px;
+  padding: 32px 28px;
+  width: 360px;
+  max-width: 90vw;
+  text-align: center;
+  animation: aob-modal-up 0.22s ease;
+  box-shadow: 0 20px 60px rgba(231, 76, 60, 0.2), 0 0 0 1px rgba(231, 76, 60, 0.15);
+}
+
+@keyframes aob-modal-up {
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.aob-void-icon {
+  font-size: 2.8rem;
+  margin-bottom: 12px;
+}
+
+.aob-void-modal h3 {
+  color: white;
+  font-size: 1.3rem;
+  font-weight: 800;
+  margin: 0 0 8px;
+  font-family: "Georgia", serif;
+}
+
+.aob-void-order-num {
+  color: #d4a055;
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: "Georgia", serif;
+  background: rgba(212, 160, 85, 0.1);
+  border: 1px solid rgba(212, 160, 85, 0.25);
+  padding: 4px 14px;
+  border-radius: 20px;
+  display: inline-block;
+  margin-bottom: 8px;
+}
+
+.aob-void-customer {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.88rem;
+  margin: 0 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.aob-void-warning {
+  color: rgba(231, 76, 60, 0.75);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  margin: 0 0 22px;
+  background: rgba(231, 76, 60, 0.07);
+  border: 1px solid rgba(231, 76, 60, 0.2);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.aob-void-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.aob-void-confirm-btn {
+  width: 100%;
+  background: rgba(231, 76, 60, 0.15);
+  border: 1px solid rgba(231, 76, 60, 0.45);
+  color: #e74c3c;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: "Georgia", serif;
+  transition: all 0.2s;
+}
+.aob-void-confirm-btn:hover {
+  background: rgba(231, 76, 60, 0.28);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(231, 76, 60, 0.25);
+}
+
+.aob-void-cancel-btn {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.55);
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: "Georgia", serif;
+  transition: all 0.2s;
+}
+.aob-void-cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.09);
+  color: white;
+}
+
 /* ── Toolbar ── */
 .aob-toolbar {
   display: flex;
@@ -179,6 +304,53 @@
   transform: scale(0.97);
 }
 
+/* Voided card */
+.aob-card--voided {
+  cursor: default;
+  opacity: 0.6;
+}
+.aob-card--voided:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Void ribbon */
+.aob-void-ribbon {
+  background: rgba(231, 76, 60, 0.15);
+  border: 1px solid rgba(231, 76, 60, 0.3);
+  color: #e74c3c;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-align: center;
+  padding: 5px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+/* Card header row: order number + customer */
+.aob-card-header-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+  padding-right: 18px;
+}
+
+.aob-order-number {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #d4a055;
+  background: rgba(212, 160, 85, 0.1);
+  border: 1px solid rgba(212, 160, 85, 0.22);
+  padding: 2px 9px;
+  border-radius: 20px;
+  font-family: "Georgia", serif;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
 /* Customer name */
 .aob-customer-name {
   display: flex;
@@ -187,8 +359,7 @@
   color: white;
   font-size: 0.82rem;
   font-weight: 700;
-  margin-bottom: 8px;
-  padding: 5px 8px;
+  padding: 3px 8px;
   background: rgba(255,255,255,0.05);
   border: 1px solid rgba(255,255,255,0.09);
   border-radius: 6px;
@@ -197,6 +368,144 @@
 .aob-customer-icon {
   font-size: 0.78rem;
   opacity: 0.7;
+}
+
+/* Items list inside card */
+.aob-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.aob-item-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+/* Card top row */
+.aob-card-top {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-bottom: 10px;
+  padding-right: 18px;
+}
+
+.aob-card-img {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid rgba(212,160,85,0.2);
+  flex-shrink: 0;
+}
+
+.aob-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.aob-card-name {
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0 0 2px;
+}
+
+.aob-card-addons {
+  color: rgba(255,255,255,0.38);
+  font-size: 0.72rem;
+  margin: 0 0 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.aob-card-subtotal {
+  color: #d4a055;
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.aob-card-qty {
+  color: rgba(255,255,255,0.35);
+  font-weight: 400;
+  font-size: 0.75rem;
+}
+
+/* Grand total row */
+.aob-card-grand-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(212, 160, 85, 0.07);
+  border: 1px solid rgba(212, 160, 85, 0.15);
+  border-radius: 6px;
+  padding: 5px 10px;
+  margin-bottom: 8px;
+}
+.aob-card-grand-total span:first-child {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.aob-card-grand-total span:last-child {
+  color: #d4a055;
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+/* Drag handle */
+.aob-drag-handle {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  color: rgba(255,255,255,0.2);
+  font-size: 1rem;
+  cursor: grab;
+  line-height: 1;
+  letter-spacing: -1px;
+  transition: color 0.2s;
+}
+.aob-card:hover .aob-drag-handle { color: rgba(255,255,255,0.45); }
+
+/* Badges */
+.aob-card-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.aob-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.5);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.aob-badge--counter {
+  color: #27ae60;
+  background: rgba(39,174,96,0.1);
+  border-color: rgba(39,174,96,0.25);
+}
+
+.aob-badge--delivery {
+  color: #3498db;
+  background: rgba(52,152,219,0.1);
+  border-color: rgba(52,152,219,0.25);
 }
 
 /* GCash payment status toggle */
@@ -231,108 +540,6 @@
 }
 .aob-gcash-status--paid:hover {
   background: rgba(39,174,96,0.22);
-}
-
-/* Drag handle */
-.aob-drag-handle {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  color: rgba(255,255,255,0.2);
-  font-size: 1rem;
-  cursor: grab;
-  line-height: 1;
-  letter-spacing: -1px;
-  transition: color 0.2s;
-}
-.aob-card:hover .aob-drag-handle { color: rgba(255,255,255,0.45); }
-
-/* Card top row */
-.aob-card-top {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  margin-bottom: 10px;
-  padding-right: 18px;
-}
-
-.aob-card-img {
-  width: 48px;
-  height: 48px;
-  object-fit: cover;
-  border-radius: 8px;
-  border: 1px solid rgba(212,160,85,0.2);
-  flex-shrink: 0;
-}
-
-.aob-card-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.aob-card-name {
-  color: white;
-  font-size: 0.9rem;
-  font-weight: 700;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin: 0 0 2px;
-}
-
-.aob-card-addons {
-  color: rgba(255,255,255,0.38);
-  font-size: 0.75rem;
-  margin: 0 0 4px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.aob-card-subtotal {
-  color: #d4a055;
-  font-size: 0.88rem;
-  font-weight: 800;
-  margin: 0;
-}
-
-.aob-card-qty {
-  color: rgba(255,255,255,0.35);
-  font-weight: 400;
-  font-size: 0.78rem;
-}
-
-/* Badges */
-.aob-card-badges {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin-bottom: 8px;
-}
-
-.aob-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 20px;
-  background: rgba(255,255,255,0.06);
-  color: rgba(255,255,255,0.5);
-  border: 1px solid rgba(255,255,255,0.1);
-}
-
-.aob-badge--counter {
-  color: #27ae60;
-  background: rgba(39,174,96,0.1);
-  border-color: rgba(39,174,96,0.25);
-}
-
-.aob-badge--delivery {
-  color: #3498db;
-  background: rgba(52,152,219,0.1);
-  border-color: rgba(52,152,219,0.25);
 }
 
 /* Date */
@@ -386,6 +593,14 @@
   line-height: 1.4;
 }
 
+/* Card action buttons area */
+.aob-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
 /* Advance button */
 .aob-advance-btn {
   width: 100%;
@@ -400,11 +615,32 @@
   font-family: "Georgia", serif;
   transition: all 0.2s;
   text-align: center;
-  margin-top: 4px;
 }
 .aob-advance-btn:hover {
   background: var(--col-color);
   color: #1a1208;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px var(--col-glow);
+}
+
+/* Void button */
+.aob-void-btn {
+  width: 100%;
+  background: rgba(231, 76, 60, 0.07);
+  border: 1px solid rgba(231, 76, 60, 0.22);
+  color: rgba(231, 76, 60, 0.65);
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: "Georgia", serif;
+  transition: all 0.2s;
+  text-align: center;
+}
+.aob-void-btn:hover {
+  background: rgba(231, 76, 60, 0.16);
+  border-color: rgba(231, 76, 60, 0.4);
+  color: #e74c3c;
+  transform: translateY(-1px);
 }

@@ -4,6 +4,14 @@ import Navbar from "../components/Navbar";
 import PaymentModal from "../components/PaymentModal";
 import "./Cart.css";
 
+// ── Generate a 5-digit order number like "No.01021" ──
+function generateOrderNumber() {
+  const last = parseInt(localStorage.getItem("lastOrderNumber") || "1000", 10);
+  const next = last + 1;
+  localStorage.setItem("lastOrderNumber", String(next));
+  return "No." + String(next).padStart(5, "0");
+}
+
 function Cart({ setUser }) {
   const [cart, setCart] = useState([]);
   const [showPayment, setShowPayment] = useState(false);
@@ -41,25 +49,41 @@ function Cart({ setUser }) {
     }
   };
 
-  // Called by PaymentModal with { fulfillment, paymentMethod, deliveryInfo }
-  const handlePaymentConfirm = ({ fulfillment, paymentMethod, deliveryInfo }) => {
+  // ── Called by PaymentModal ──
+  // Groups ALL cart items into ONE order transaction
+  const handlePaymentConfirm = ({ fulfillment, paymentMethod, deliveryInfo, gcashRef }) => {
     const now = new Date().toLocaleString();
-    // Pull logged-in user's name from localStorage session
     const sessionUser = JSON.parse(localStorage.getItem("user") || "{}");
     const customerName = sessionUser?.name || sessionUser?.email || "Guest";
-    const newOrders = cart.map((item) => ({
-      ...item,
-      date: now,
+    const orderNumber = generateOrderNumber();
+
+    // One order object containing all items as an array
+    const newOrder = {
       orderId: Date.now() + Math.random(),
+      orderNumber,                          // e.g. "No.01021"
+      date: now,
       status: "ordered",
-      fulfillment,          // "counter" | "delivery"
-      paymentMethod,        // "cash" | "gcash" | "cod"
-      deliveryInfo,         // { name, phone, address, note } or null
-      customerName,         // logged-in user's display name
-      gcashPaid: paymentMethod === "gcash" ? false : null, // null = not gcash, false = gcash unpaid, true = gcash confirmed
-    }));
+      fulfillment,                          // "counter" | "delivery"
+      paymentMethod,                        // "cash" | "gcash" | "cod"
+      deliveryInfo: deliveryInfo || null,
+      customerName,
+      gcashRef: paymentMethod === "gcash" ? gcashRef : null,
+      gcashPaid: paymentMethod === "gcash" ? false : null,
+      items: cart.map((item) => ({
+        cartId: item.cartId,
+        name: item.name,
+        category: item.category,
+        price: item.price,
+        quantity: item.quantity,
+        image_url: item.image_url || "",
+        addons: item.addons || "",
+      })),
+      // Convenience total
+      total: cart.reduce((sum, item) => sum + parseFloat(item.price) * item.quantity, 0).toFixed(2),
+    };
+
     let orders = JSON.parse(localStorage.getItem("orders")) || [];
-    orders = [...orders, ...newOrders];
+    orders = [...orders, newOrder];
     localStorage.setItem("orders", JSON.stringify(orders));
     localStorage.setItem("cart", JSON.stringify([]));
     setCart([]);

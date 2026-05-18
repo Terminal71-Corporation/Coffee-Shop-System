@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import "./Navbar.css";
 
@@ -16,169 +16,135 @@ function Navbar({
 }) {
 
   const navigate = useNavigate();
+  const location = useLocation();
 
   const user = JSON.parse(
     localStorage.getItem("user")
   );
 
   const [search, setSearch] = useState("");
-
   const [suggestions, setSuggestions] = useState([]);
 
+  // ── Badge counts ──
+  const [cartCount, setCartCount] = useState(0);
+  const [activeOrderCount, setActiveOrderCount] = useState(0);
+
+  const refreshBadges = () => {
+    // Cart: total quantity across all items
+    const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+    const totalQty = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+    setCartCount(totalQty);
+
+    // Orders: active (not completed / voided / shipped)
+    const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+    const active = orders.filter(
+      (o) => o.status !== "completed" && o.status !== "voided" && o.status !== "shipped"
+    ).length;
+    setActiveOrderCount(active);
+  };
+
+  useEffect(() => {
+    refreshBadges();
+    const onStorage = () => refreshBadges();
+    window.addEventListener("storage", onStorage);
+    const interval = setInterval(refreshBadges, 800);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      clearInterval(interval);
+    };
+  }, [location.pathname]);
+
   const handleLogout = () => {
-
     localStorage.removeItem("user");
-
     setUser(null);
-
     navigate("/login");
   };
 
   const handleSearch = (e) => {
-
     e.preventDefault();
-
     navigate(`/products?search=${search}`);
-
     setSuggestions([]);
   };
 
   const handleCategoryClick = (cat) => {
-
-    if (setActiveCategory)
-      setActiveCategory(cat);
-
+    if (setActiveCategory) setActiveCategory(cat);
     if (cat === "All") {
       navigate("/products");
     } else {
-      navigate(
-        `/products?cat=${cat.toLowerCase()}`
-      );
+      navigate(`/products?cat=${cat.toLowerCase()}`);
     }
   };
 
   useEffect(() => {
-
     fetch("http://localhost:5000/products")
       .then((res) => res.json())
       .then((data) => {
-
         if (search.length > 0) {
-
           const filtered = data.filter((p) =>
-            p.name
-              .toLowerCase()
-              .includes(search.toLowerCase())
+            p.name.toLowerCase().includes(search.toLowerCase())
           );
-
           setSuggestions(filtered);
-
         } else {
           setSuggestions([]);
         }
-
       });
-
   }, [search]);
 
   return (
     <header className="site-header">
 
       <div className="topbar">
-
         <span className="topbar-tagline">
           Premium Coffee Experience ☕
         </span>
-
         <div className="topbar-right">
-
           {user && (
             <span>
               Hi, <strong>{user.username}</strong>
             </span>
           )}
-
-          <Link to="/profile">
-            My Account
-          </Link>
-
-          <button
-            className="topbar-logout"
-            onClick={handleLogout}
-          >
+          <Link to="/profile">My Account</Link>
+          <button className="topbar-logout" onClick={handleLogout}>
             Logout
           </button>
-
         </div>
-
       </div>
 
       <nav className="navbar-main">
 
-        <Link
-          to="/home"
-          className="navbar-logo"
-        >
+        <Link to="/home" className="navbar-logo">
           ☕ Coffee<span>Shop</span>
         </Link>
 
         <div className="search-wrapper">
-
-          <form
-            className="search-bar"
-            onSubmit={handleSearch}
-          >
-
+          <form className="search-bar" onSubmit={handleSearch}>
             <input
               type="text"
               placeholder="Search coffee..."
               value={search}
-              onChange={(e) =>
-                setSearch(e.target.value)
-              }
+              onChange={(e) => setSearch(e.target.value)}
               className="search-input"
             />
-
-            <button
-              type="submit"
-              className="search-btn"
-            >
-              🔍
-            </button>
-
+            <button type="submit" className="search-btn">🔍</button>
           </form>
 
           {suggestions.length > 0 && (
-
             <div className="search-suggestions">
-
-              {suggestions
-                .slice(0,5)
-                .map((item) => (
-
-                  <div
-                    key={item.product_id}
-                    className="suggestion-item"
-                    onClick={() => {
-
-                      navigate(
-                        `/products?search=${item.name}`
-                      );
-
-                      setSearch(item.name);
-
-                      setSuggestions([]);
-                    }}
-                  >
-                    {item.name}
-                  </div>
-
+              {suggestions.slice(0, 5).map((item) => (
+                <div
+                  key={item.product_id}
+                  className="suggestion-item"
+                  onClick={() => {
+                    navigate(`/products?search=${item.name}`);
+                    setSearch(item.name);
+                    setSuggestions([]);
+                  }}
+                >
+                  {item.name}
+                </div>
               ))}
-
             </div>
-
           )}
-
         </div>
 
         <div className="navbar-actions">
@@ -187,25 +153,28 @@ function Navbar({
             🏠
           </Link>
 
-          <Link
-            to="/products"
-            className="action-btn"
-          >
+          <Link to="/products" className="action-btn">
             ☕
           </Link>
 
-          <Link
-            to="/cart"
-            className="action-btn"
-          >
+          {/* Cart with quantity badge */}
+          <Link to="/cart" className="action-btn action-btn--icon">
             🛒
+            {cartCount > 0 && (
+              <span className="nav-badge nav-badge--cart">
+                {cartCount > 99 ? "99+" : cartCount}
+              </span>
+            )}
           </Link>
 
-          <Link
-            to="/orders"
-            className="action-btn"
-          >
+          {/* Orders with active-order badge */}
+          <Link to="/orders" className="action-btn action-btn--icon">
             📦
+            {activeOrderCount > 0 && (
+              <span className="nav-badge nav-badge--orders">
+                {activeOrderCount > 99 ? "99+" : activeOrderCount}
+              </span>
+            )}
           </Link>
 
         </div>
@@ -213,25 +182,15 @@ function Navbar({
       </nav>
 
       <nav className="navbar-categories">
-
         {CATEGORIES.map((cat) => (
-
           <button
             key={cat}
-            className={`cat-link ${
-              activeCategory === cat
-                ? "cat-active"
-                : ""
-            }`}
-            onClick={() =>
-              handleCategoryClick(cat)
-            }
+            className={`cat-link ${activeCategory === cat ? "cat-active" : ""}`}
+            onClick={() => handleCategoryClick(cat)}
           >
             {cat}
           </button>
-
         ))}
-
       </nav>
 
     </header>

@@ -289,6 +289,7 @@
 .pm-field-input::placeholder { color: rgba(255,255,255,0.22); }
 .pm-field-input:focus { border-color: rgba(212,160,85,0.5); }
 .pm-field-input.error { border-color: rgba(231,76,60,0.6); }
+.pm-field-input.valid { border-color: rgba(39,174,96,0.5); }
 
 .pm-field-textarea {
   resize: vertical;
@@ -435,6 +436,55 @@
   font-weight: 700;
   flex-shrink: 0;
   margin-top: 1px;
+}
+
+/* ── GCash Reference Number block ── */
+.pm-gcash-ref-block {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(0, 180, 255, 0.05);
+  border: 1px solid rgba(0, 180, 255, 0.2);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+
+.pm-gcash-ref-label {
+  color: #00b4ff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.pm-gcash-ref-hint {
+  color: rgba(255,255,255,0.35);
+  font-size: 0.77rem;
+  margin: 0 0 4px;
+  line-height: 1.4;
+}
+
+.pm-gcash-ref-input {
+  font-size: 1.05rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+
+.pm-gcash-ref-ok {
+  color: #2ecc71;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* ── Disclaimer ── */
+.pm-gcash-disclaimer {
+  color: rgba(255,255,255,0.28);
+  font-size: 0.75rem;
+  text-align: center;
+  line-height: 1.5;
+  margin-top: -6px;
 }
 
 .pm-gcash-paid-btn {
