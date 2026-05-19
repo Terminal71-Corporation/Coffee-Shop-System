@@ -1,57 +1,104 @@
 import { useEffect, useRef, useState } from "react";
+import socket from "../socket";
 
 function AdminChatBox({ adminId, selectedUser }) {
 
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
+
   const bottomRef = useRef(null);
 
+  // REGISTER ADMIN
+  useEffect(() => {
+
+    socket.emit("register", adminId);
+
+  }, []);
+
+  // RECEIVE LIVE
+  useEffect(() => {
+
+    socket.on("receive_message", (data) => {
+
+      if (
+        data.sender_id === selectedUser?.user_id ||
+        data.receiver_id === selectedUser?.user_id
+      ) {
+        setMessages((prev) => [...prev, data]);
+      }
+
+    });
+
+    return () => {
+      socket.off("receive_message");
+    };
+
+  }, [selectedUser]);
+
+  // FETCH CONVERSATION
   const fetchMessages = async () => {
+
     if (!selectedUser) return;
 
-    try {
-      const res = await fetch(
-        `http://localhost:5000/api/messages/conversation/${adminId}/${selectedUser.user_id}`
-      );
-      const data = await res.json();
-      setMessages(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.log("AdminChatBox fetch error:", err);
-    }
+    const res = await fetch(
+      `http://localhost:5000/api/messages/conversation/${adminId}/${selectedUser.user_id}`
+    );
+
+    const data = await res.json();
+
+    setMessages(data);
   };
 
   useEffect(() => {
-    if (!selectedUser) return;
 
     fetchMessages();
-    const interval = setInterval(fetchMessages, 2000);
-    return () => clearInterval(interval);
+
   }, [selectedUser]);
 
-  // Auto-scroll to bottom on new messages
+  // AUTO SCROLL
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
 
-  const sendMessage = async () => {
-    if (!text.trim() || !selectedUser) return;
-
-    await fetch("http://localhost:5000/api/messages/send", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        sender_id: adminId,
-        receiver_id: selectedUser.user_id,
-        message: text,
-      }),
+    bottomRef.current?.scrollIntoView({
+      behavior: "smooth"
     });
 
+  }, [messages]);
+
+  // SEND
+  const sendMessage = async () => {
+
+    if (!text.trim()) return;
+
+    const newMessage = {
+      sender_id: adminId,
+      receiver_id: selectedUser.user_id,
+      message: text
+    };
+
+    // SAVE DATABASE
+    await fetch("http://localhost:5000/api/messages/send", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(newMessage)
+    });
+
+    // SHOW INSTANTLY
+    setMessages((prev) => [...prev, newMessage]);
+
+    // LIVE SEND
+    socket.emit("send_message", newMessage);
+
     setText("");
-    fetchMessages();
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === "Enter") sendMessage();
+
+    if (e.key === "Enter") {
+      sendMessage();
+    }
+
   };
 
   if (!selectedUser) {
@@ -66,34 +113,46 @@ function AdminChatBox({ adminId, selectedUser }) {
     <div className="admin-chat-box">
 
       <div className="chat-header">
-        💬 Chat with <strong>{selectedUser.name}</strong>
+
+        Chat with {selectedUser.name}
+
       </div>
 
       <div className="chat-body">
-        {messages.length === 0 && (
-          <p style={{ textAlign: "center", color: "#aaa", fontSize: "13px", marginTop: "20px" }}>
-            No messages yet
-          </p>
-        )}
-        {messages.map((msg) => (
+
+        {messages.map((msg, index) => (
+
           <div
-            key={msg.message_id}
-            className={msg.sender_id === adminId ? "my-msg" : "their-msg"}
+            key={index}
+            className={
+              msg.sender_id === adminId
+                ? "my-msg"
+                : "their-msg"
+            }
           >
             {msg.message}
           </div>
+
         ))}
-        <div ref={bottomRef} />
+
+        <div ref={bottomRef}></div>
+
       </div>
 
       <div className="chat-input">
+
         <input
+          type="text"
           value={text}
+          placeholder="Type message..."
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Type a message..."
         />
-        <button onClick={sendMessage}>Send</button>
+
+        <button onClick={sendMessage}>
+          Send
+        </button>
+
       </div>
 
     </div>

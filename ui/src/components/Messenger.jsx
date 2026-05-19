@@ -1,121 +1,168 @@
 import { useEffect, useRef, useState } from "react";
 import "./Messenger.css";
+import socket from "../socket";
 
 const ADMIN_ID = 1;
 
 function Messenger({ userId }) {
+
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
+
   const bottomRef = useRef(null);
 
-  // ── Listen for the navbar 💬 button toggle ──
+  // REGISTER USER
   useEffect(() => {
-    const handleExternalToggle = () => setIsOpen((prev) => !prev);
-    window.addEventListener("toggle-messenger", handleExternalToggle);
-    return () => window.removeEventListener("toggle-messenger", handleExternalToggle);
+    if (userId) {
+      socket.emit("register", userId);
+    }
+  }, [userId]);
+
+  // RECEIVE LIVE MESSAGE
+  useEffect(() => {
+
+    socket.on("receive_message", (data) => {
+
+      setMessages((prev) => [...prev, data]);
+
+    });
+
+    return () => {
+      socket.off("receive_message");
+    };
+
   }, []);
 
+  // FETCH OLD MESSAGES
   const fetchMessages = async () => {
-    if (!userId) return;
 
     try {
+
       const res = await fetch(
         `http://localhost:5000/api/messages/conversation/${userId}/${ADMIN_ID}`
       );
+
       const data = await res.json();
-      setMessages(Array.isArray(data) ? data : []);
+
+      setMessages(data);
+
     } catch (err) {
-      console.log("Messenger fetch error:", err);
+      console.log(err);
     }
   };
 
   useEffect(() => {
-    if (!isOpen || !userId) return;
 
-    fetchMessages();
-    const interval = setInterval(fetchMessages, 2000);
-    return () => clearInterval(interval);
-  }, [isOpen, userId]);
+    if (isOpen) {
+      fetchMessages();
+    }
 
-  // Auto-scroll to latest message
+  }, [isOpen]);
+
+  // AUTO SCROLL
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    bottomRef.current?.scrollIntoView({
+      behavior: "smooth"
+    });
   }, [messages]);
 
+  // SEND MESSAGE
   const sendMessage = async () => {
-    if (!text.trim() || !userId) return;
 
+    if (!text.trim()) return;
+
+    const newMessage = {
+      sender_id: userId,
+      receiver_id: ADMIN_ID,
+      message: text,
+    };
+
+    // SAVE TO DATABASE
     await fetch("http://localhost:5000/api/messages/send", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        sender_id: userId,
-        receiver_id: ADMIN_ID,
-        message: text,
-      }),
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(newMessage)
     });
 
+    // SHOW IN UI INSTANTLY
+    setMessages((prev) => [...prev, newMessage]);
+
+    // SEND LIVE
+    socket.emit("send_message", newMessage);
+
     setText("");
-    fetchMessages();
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === "Enter") sendMessage();
+    if (e.key === "Enter") {
+      sendMessage();
+    }
   };
 
-  // Don't render at all if no userId
-  if (!userId) {
-    console.warn("Messenger: no userId provided — widget hidden");
-    return null;
-  }
+  if (!userId) return null;
 
   return (
     <div className="messenger-widget">
 
-      {/* CHAT WINDOW */}
       {isOpen && (
         <div className="messenger-box">
 
           <div className="messenger-header">
+
             <span>💬 Chat with Support</span>
-            <button onClick={() => setIsOpen(false)}>✕</button>
+
+            <button onClick={() => setIsOpen(false)}>
+              ✕
+            </button>
+
           </div>
 
           <div className="messenger-body">
-            {messages.length === 0 && (
-              <p className="messenger-empty">Send us a message!</p>
-            )}
 
-            {messages.map((msg) => (
+            {messages.map((msg, index) => (
+
               <div
-                key={msg.message_id}
-                className={msg.sender_id === userId ? "msg-mine" : "msg-theirs"}
+                key={index}
+                className={
+                  msg.sender_id === userId
+                    ? "msg-mine"
+                    : "msg-theirs"
+                }
               >
                 {msg.message}
               </div>
+
             ))}
 
-            <div ref={bottomRef} />
+            <div ref={bottomRef}></div>
+
           </div>
 
           <div className="messenger-input">
+
             <input
+              type="text"
               value={text}
+              placeholder="Type a message..."
               onChange={(e) => setText(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Type a message..."
             />
-            <button onClick={sendMessage}>Send</button>
+
+            <button onClick={sendMessage}>
+              Send
+            </button>
+
           </div>
 
         </div>
       )}
 
-      {/* TOGGLE BUTTON — bottom-right floating bubble */}
       <button
         className="messenger-toggle"
-        onClick={() => setIsOpen((prev) => !prev)}
+        onClick={() => setIsOpen(!isOpen)}
       >
         💬
       </button>
