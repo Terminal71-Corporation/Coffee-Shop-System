@@ -1,126 +1,53 @@
 const express = require("express");
-const cors = require("cors");
 const http = require("http");
-
 const { Server } = require("socket.io");
+const cors = require("cors");
 
+// ── Route imports ──
 const authRoutes = require("./routes/authRoutes");
 const productRoutes = require("./routes/productRoutes");
-const categoryRoutes = require("./routes/categoryRoutes");
-const userRoutes = require("./routes/users");
+const userRoutes = require("./routes/userRoutes");
 const messageRoutes = require("./routes/messageRoutes");
+// add any other route files you have
 
 const app = express();
-
-app.use(cors());
-app.use(express.json());
-
-
-// ======================
-// ROUTES
-// ======================
-
-app.use("/api/messages", messageRoutes);
-app.use("/categories", categoryRoutes);
-app.use("/auth", authRoutes);
-app.use("/products", productRoutes);
-app.use("/users", userRoutes);
-
-
-// ======================
-// TEST ROUTE
-// ======================
-
-app.get("/", (req, res) => {
-  res.send("Coffee Shop API Running ☕");
-});
-
-
-// ======================
-// SOCKET SERVER
-// ======================
-
 const server = http.createServer(app);
 
 const io = new Server(server, {
-  cors: {
-    origin: "http://localhost:5173",
-    methods: ["GET", "POST"]
-  }
+  cors: { origin: "*", methods: ["GET", "POST"] },
 });
 
+// Export io so controllers can emit events
+module.exports.io = io;
 
-// ======================
-// ONLINE USERS
-// ======================
+app.use(cors());
+app.use(express.json({ limit: "10mb" }));    // limit needed for base64 images
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-const users = {};
+// ── Routes ──
+app.use("/auth", authRoutes);
+app.use("/products", productRoutes);
+app.use("/users", userRoutes);
+app.use("/api/messages", messageRoutes);
 
-
-// ======================
-// SOCKET CONNECTION
-// ======================
-
+// ── Socket.IO ──
 io.on("connection", (socket) => {
+  console.log("Client connected:", socket.id);
 
-  console.log("User connected:", socket.id);
-
-
-  // REGISTER USER
-  socket.on("register", (userId) => {
-
-    users[userId] = socket.id;
-
-    console.log("ONLINE USERS:", users);
-
+  // Admin adds a product → broadcast to ALL clients as "new_product"
+  socket.on("admin_new_product", (data) => {
+    io.emit("new_product", data);
   });
 
-
-  // SEND LIVE MESSAGE
-  socket.on("send_message", (data) => {
-
-    const receiverSocketId = users[data.receiver_id];
-
-    if (receiverSocketId) {
-
-      io.to(receiverSocketId).emit(
-        "receive_message",
-        data
-      );
-
-    }
-
+  // Admin sends a message notification → broadcast to target user
+  socket.on("admin_message", (data) => {
+    io.emit("new_message", data);
   });
 
-
-  // DISCONNECT
   socket.on("disconnect", () => {
-
-    console.log("User disconnected");
-
-    for (let id in users) {
-
-      if (users[id] === socket.id) {
-
-        delete users[id];
-
-      }
-
-    }
-
+    console.log("Client disconnected:", socket.id);
   });
-
 });
 
-
-// ======================
-// START SERVER
-// ======================
-
-const PORT = 5000;
-
-server.listen(PORT, () => {
-
-  console.log(`Server running on http://localhost:${PORT}`);
-
-});
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));

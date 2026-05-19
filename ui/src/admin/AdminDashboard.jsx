@@ -3,16 +3,13 @@ import { useNavigate } from "react-router-dom";
 import AdminNavbar from "./AdminNavbar";
 import AdminMessenger from "./AdminMessenger";
 import AdminOrdersBoard from "./AdminOrdersBoard";
+import socket from "../services/messageService";
 
 import "./AdminStyle.css";
 import "./AdminOrdersBoard.css";
 
-const FIXED_CATEGORIES = [
-  "Espresso", "Latte", "Tea", "Pastries", "Beans", "Equipment",
-];
-
+const FIXED_CATEGORIES = ["Espresso", "Latte", "Tea", "Pastries", "Beans", "Equipment"];
 const PRODUCT_STATUSES = ["Available", "Not Available", "Best Seller"];
-
 const STATUS_STYLE = {
   "Available":     { color: "#3cb371", bg: "rgba(46,139,87,0.15)" },
   "Not Available": { color: "#e74c3c", bg: "rgba(192,57,43,0.15)" },
@@ -35,7 +32,7 @@ function AdminDashboard() {
   const [selectedUser, setSelectedUser] = useState(null);
 
   const [form, setForm] = useState({
-    name: "", category: "", price: "", status: "Available", image_url: "",
+    name: "", description: "", category: "", price: "", status: "Available", image_url: ""
   });
   const [editId, setEditId] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
@@ -75,17 +72,20 @@ function AdminDashboard() {
     try {
       if (editId) {
         await fetch(`http://localhost:5000/products/${editId}`, {
-          method: "PUT", headers: { "Content-Type": "application/json" },
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
       } else {
         await fetch("http://localhost:5000/products", {
-          method: "POST", headers: { "Content-Type": "application/json" },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
+        socket.emit("admin_new_product", { name: payload.name, price: payload.price });
       }
       setEditId(null);
-      setForm({ name: "", category: "", price: "", status: "Available", image_url: "" });
+      setForm({ name: "", description: "", category: "", price: "", status: "Available", image_url: "" });
       setImagePreview(null);
       setIsModalOpen(false);
       fetchProducts();
@@ -100,8 +100,12 @@ function AdminDashboard() {
 
   const editProduct = (product) => {
     setForm({
-      name: product.name, category: product.category, price: product.price,
-      status: product.status || "Available", image_url: product.image_url || "",
+      name: product.name,
+      description: product.description || "",
+      category: product.category,
+      price: product.price,
+      status: product.status || "Available",
+      image_url: product.image_url || "",
     });
     setImagePreview(product.image_url || null);
     setEditId(product.product_id);
@@ -110,7 +114,7 @@ function AdminDashboard() {
 
   const cancelEdit = () => {
     setEditId(null);
-    setForm({ name: "", category: "", price: "", status: "Available", image_url: "" });
+    setForm({ name: "", description: "", category: "", price: "", status: "Available", image_url: "" });
     setImagePreview(null);
     setIsModalOpen(false);
   };
@@ -138,7 +142,7 @@ function AdminDashboard() {
               <h1 className="admin-title">Products</h1>
               <button className="add-btn admin-submit-btn" onClick={() => {
                 setEditId(null);
-                setForm({ name: "", category: "", price: "", status: "Available", image_url: "" });
+                setForm({ name: "", description: "", category: "", price: "", status: "Available", image_url: "" });
                 setImagePreview(null);
                 setIsModalOpen(true);
               }}>+ Add Product</button>
@@ -152,11 +156,19 @@ function AdminDashboard() {
                   const s = STATUS_STYLE[p.status] || STATUS_STYLE["Available"];
                   return (
                     <tr key={p.product_id}>
-                      <td>{p.image_url ? <img src={p.image_url} className="table-image" alt={p.name} /> : <div className="no-image-placeholder">No Image</div>}</td>
+                      <td>
+                        {p.image_url
+                          ? <img src={p.image_url} className="table-image" alt={p.name} />
+                          : <div className="no-image-placeholder">No Image</div>}
+                      </td>
                       <td>{p.name}</td>
                       <td><span className="category-badge">{p.category}</span></td>
                       <td>₱{p.price}</td>
-                      <td><span className="category-badge" style={{ background: s.bg, color: s.color, borderColor: s.color + "55" }}>{p.status || "Available"}</span></td>
+                      <td>
+                        <span className="category-badge" style={{ background: s.bg, color: s.color, borderColor: s.color + "55" }}>
+                          {p.status || "Available"}
+                        </span>
+                      </td>
                       <td>
                         <button className="edit-btn" onClick={() => editProduct(p)}>Edit</button>
                         <button className="delete-btn" onClick={() => deleteProduct(p.product_id)}>Delete</button>
@@ -174,8 +186,6 @@ function AdminDashboard() {
           <>
             <h1 className="admin-title">Users</h1>
             <div style={{ display: "flex", gap: "24px", alignItems: "flex-start" }}>
-
-              {/* TABLE */}
               <table className="admin-table" style={{ flex: 1 }}>
                 <thead>
                   <tr><th>Avatar</th><th>Name</th><th>Email</th><th>Role</th><th>Actions</th></tr>
@@ -220,20 +230,12 @@ function AdminDashboard() {
                 </tbody>
               </table>
 
-              {/* DETAIL PANEL */}
               {selectedUser && (
-                <div style={{
-                  width: 290, flexShrink: 0,
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(212,160,85,0.25)",
-                  borderRadius: 12, padding: 24,
-                }}>
+                <div style={{ width: 290, flexShrink: 0, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(212,160,85,0.25)", borderRadius: 12, padding: 24 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                     <span style={{ color: "#d4a055", fontWeight: 600, fontSize: 14 }}>User Details</span>
                     <button onClick={() => setSelectedUser(null)} style={{ background: "none", border: "none", color: "#aaa", cursor: "pointer", fontSize: 16 }}>✕</button>
                   </div>
-
-                  {/* Avatar + Name */}
                   <div style={{ textAlign: "center", marginBottom: 20 }}>
                     {selectedUser.profile_picture ? (
                       <img src={selectedUser.profile_picture} alt={selectedUser.name} style={{ width: 80, height: 80, borderRadius: "50%", objectFit: "cover", border: "3px solid #d4a055", marginBottom: 8 }} />
@@ -244,17 +246,10 @@ function AdminDashboard() {
                     )}
                     <div style={{ color: "#f0e6d3", fontWeight: 600, fontSize: 16 }}>{selectedUser.name}</div>
                     <div style={{ color: "#aaa", fontSize: 12, marginTop: 2 }}>{selectedUser.email}</div>
-                    <span className="category-badge" style={{
-                      marginTop: 6, display: "inline-block",
-                      ...(selectedUser.role === "admin"
-                        ? { background: "rgba(231,76,60,0.2)", color: "#e74c3c" }
-                        : { background: "rgba(212,160,85,0.15)", color: "#d4a055" }),
-                    }}>
+                    <span className="category-badge" style={{ marginTop: 6, display: "inline-block", ...(selectedUser.role === "admin" ? { background: "rgba(231,76,60,0.2)", color: "#e74c3c" } : { background: "rgba(212,160,85,0.15)", color: "#d4a055" }) }}>
                       {selectedUser.role?.toUpperCase()}
                     </span>
                   </div>
-
-                  {/* Info rows */}
                   {[
                     { label: "🎂 Birthdate", value: fmt(selectedUser.birthdate) },
                     { label: "🔢 Age", value: selectedUser.age ? `${selectedUser.age} years old` : "Not set" },
@@ -272,35 +267,38 @@ function AdminDashboard() {
           </>
         )}
 
-        {/* ===== ORDERS ===== */}
-        {activeView === "orders" && (
-          <>
-            <h1 className="admin-title">Orders Board</h1>
-            <AdminOrdersBoard />
-          </>
-        )}
-
-        {/* ===== MESSAGES ===== */}
-        {activeView === "messages" && (
-          <>
-            <h1 className="admin-title">Messages</h1>
-            <AdminMessenger />
-          </>
-        )}
+        {activeView === "orders" && (<><h1 className="admin-title">Orders Board</h1><AdminOrdersBoard /></>)}
+        {activeView === "messages" && (<><h1 className="admin-title">Messages</h1><AdminMessenger /></>)}
       </div>
 
-      {/* ===== PRODUCT MODAL ===== */}
+      {/* ===== MODAL ===== */}
       {isModalOpen && (
         <div className="modal-overlay">
           <div className="modal-box">
             <h2>{editId ? "Edit Product" : "Add Product"}</h2>
             <form className="modal-form" onSubmit={handleSubmit}>
-              <input placeholder="Product Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+              <input
+                placeholder="Product Name"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                required
+              />
+              <input
+                placeholder="Description (optional)"
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+              />
               <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
                 <option value="">Select Category</option>
                 {FIXED_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
-              <input type="number" placeholder="Price" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} required />
+              <input
+                type="number"
+                placeholder="Price"
+                value={form.price}
+                onChange={(e) => setForm({ ...form, price: e.target.value })}
+                required
+              />
               <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
                 {PRODUCT_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>

@@ -1,43 +1,31 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import "./Navbar.css";
+import NotificationBell from "./NotificationBell";
 
-const CATEGORIES = [
-  "All",
-  "Espresso",
-  "Latte",
-  "Tea",
-];
+const CATEGORIES = ["All", "Espresso", "Latte", "Tea"];
 
-function Navbar({
-  setUser,
-  activeCategory,
-  setActiveCategory,
-}) {
-
+function Navbar({ setUser, activeCategory, setActiveCategory }) {
   const navigate = useNavigate();
   const location = useLocation();
 
   const user = JSON.parse(localStorage.getItem("user") || "null");
   const isAdmin = user?.role === "admin";
+  const userId = user?.user_id || null;
 
   const [search, setSearch] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [profileImage, setProfileImage] = useState("");
-
   const [cartCount, setCartCount] = useState(0);
   const [activeOrderCount, setActiveOrderCount] = useState(0);
 
   const refreshBadges = () => {
     const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-    const totalQty = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
-    setCartCount(totalQty);
-
+    setCartCount(cart.reduce((sum, item) => sum + (item.quantity || 1), 0));
     const orders = JSON.parse(localStorage.getItem("orders") || "[]");
-    const active = orders.filter(
-      (o) => o.status !== "completed" && o.status !== "voided" && o.status !== "shipped"
-    ).length;
-    setActiveOrderCount(active);
+    setActiveOrderCount(
+      orders.filter((o) => o.status !== "completed" && o.status !== "voided" && o.status !== "shipped").length
+    );
   };
 
   const refreshProfileImage = async () => {
@@ -58,15 +46,13 @@ function Navbar({
     const onStorage = () => { refreshBadges(); refreshProfileImage(); };
     window.addEventListener("storage", onStorage);
     const interval = setInterval(refreshBadges, 800);
-    return () => {
-      window.removeEventListener("storage", onStorage);
-      clearInterval(interval);
-    };
+    return () => { window.removeEventListener("storage", onStorage); clearInterval(interval); };
   }, [location.pathname]);
 
   const handleLogout = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("user_id");
+    localStorage.removeItem("notifications");
     setUser(null);
     navigate("/login");
   };
@@ -79,11 +65,7 @@ function Navbar({
 
   const handleCategoryClick = (cat) => {
     if (setActiveCategory) setActiveCategory(cat);
-    if (cat === "All") {
-      navigate("/products");
-    } else {
-      navigate(`/products?cat=${cat.toLowerCase()}`);
-    }
+    cat === "All" ? navigate("/products") : navigate(`/products?cat=${cat.toLowerCase()}`);
   };
 
   const handleMessengerToggle = () => {
@@ -94,42 +76,29 @@ function Navbar({
     fetch("http://localhost:5000/products")
       .then((res) => res.json())
       .then((data) => {
-        if (search.length > 0) {
-          const filtered = data.filter((p) =>
-            p.name.toLowerCase().includes(search.toLowerCase())
-          );
-          setSuggestions(filtered);
-        } else {
-          setSuggestions([]);
-        }
+        setSuggestions(
+          search.length > 0
+            ? data.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
+            : []
+        );
       });
   }, [search]);
 
   const initials = user?.name
     ? user.name.charAt(0).toUpperCase()
-    : user?.username
-    ? user.username.charAt(0).toUpperCase()
-    : "?";
+    : user?.username ? user.username.charAt(0).toUpperCase() : "?";
 
   return (
     <header className="site-header">
-
       <div className="topbar">
-        <span className="topbar-tagline">
-          Premium Coffee Experience ☕
-        </span>
+        <span className="topbar-tagline">Premium Coffee Experience ☕</span>
         <div className="topbar-right">
-          <button className="topbar-logout" onClick={handleLogout}>
-            Logout
-          </button>
+          <button className="topbar-logout" onClick={handleLogout}>Logout</button>
         </div>
       </div>
 
       <nav className="navbar-main">
-
-        <Link to="/home" className="navbar-logo">
-          ☕ Coffee<span>Shop</span>
-        </Link>
+        <Link to="/home" className="navbar-logo">☕ Coffee<span>Shop</span></Link>
 
         <div className="search-wrapper">
           <form className="search-bar" onSubmit={handleSearch}>
@@ -142,18 +111,13 @@ function Navbar({
             />
             <button type="submit" className="search-btn">🔍</button>
           </form>
-
           {suggestions.length > 0 && (
             <div className="search-suggestions">
               {suggestions.slice(0, 5).map((item) => (
                 <div
                   key={item.product_id}
                   className="suggestion-item"
-                  onClick={() => {
-                    navigate(`/products?search=${item.name}`);
-                    setSearch(item.name);
-                    setSuggestions([]);
-                  }}
+                  onClick={() => { navigate(`/products?search=${item.name}`); setSearch(item.name); setSuggestions([]); }}
                 >
                   {item.name}
                 </div>
@@ -163,29 +127,23 @@ function Navbar({
         </div>
 
         <div className="navbar-actions">
-
           <Link to="/home" className="action-btn">🏠</Link>
           <Link to="/products" className="action-btn">☕</Link>
 
           {/* Cart */}
           <Link to="/cart" className="action-btn action-btn--icon">
             🛒
-            {cartCount > 0 && (
-              <span className="nav-badge nav-badge--cart">
-                {cartCount > 99 ? "99+" : cartCount}
-              </span>
-            )}
+            {cartCount > 0 && <span className="nav-badge nav-badge--cart">{cartCount > 99 ? "99+" : cartCount}</span>}
           </Link>
 
           {/* Orders */}
           <Link to="/orders" className="action-btn action-btn--icon">
             📦
-            {activeOrderCount > 0 && (
-              <span className="nav-badge nav-badge--orders">
-                {activeOrderCount > 99 ? "99+" : activeOrderCount}
-              </span>
-            )}
+            {activeOrderCount > 0 && <span className="nav-badge nav-badge--orders">{activeOrderCount > 99 ? "99+" : activeOrderCount}</span>}
           </Link>
+
+          {/* 🔔 Notifications — all users */}
+          <NotificationBell userId={userId} />
 
           {/* 💬 Messages — regular users only */}
           {!isAdmin && (
@@ -194,39 +152,25 @@ function Navbar({
               onClick={handleMessengerToggle}
               title="Messages"
               style={{ background: "none", border: "none", cursor: "pointer" }}
-            >
-              💬
-            </button>
+            >💬</button>
           )}
 
-          {/* 🛡️ Admin Panel link — admin only */}
+          {/* 🛡️ Admin panel — admin only */}
           {isAdmin && (
-            <Link
-              to="/admin"
-              className="action-btn action-btn--icon"
-              title="Admin Panel"
-              style={{ fontSize: "18px" }}
-            >
+            <Link to="/admin" className="action-btn action-btn--icon" title="Admin Panel" style={{ fontSize: "18px" }}>
               🛡️
             </Link>
           )}
-
         </div>
 
         {/* Profile avatar */}
         <Link to="/profile" className="action-btn action-btn--icon nav-avatar-link" title="My Account">
           {profileImage ? (
-            <img
-              src={profileImage}
-              alt="profile"
-              className="nav-avatar-img"
-              onError={(e) => { e.target.style.display = "none"; }}
-            />
+            <img src={profileImage} alt="profile" className="nav-avatar-img" onError={(e) => { e.target.style.display = "none"; }} />
           ) : (
             <span className="nav-avatar-initials">{initials}</span>
           )}
         </Link>
-
       </nav>
 
       <nav className="navbar-categories">
@@ -235,12 +179,9 @@ function Navbar({
             key={cat}
             className={`cat-link ${activeCategory === cat ? "cat-active" : ""}`}
             onClick={() => handleCategoryClick(cat)}
-          >
-            {cat}
-          </button>
+          >{cat}</button>
         ))}
       </nav>
-
     </header>
   );
 }
