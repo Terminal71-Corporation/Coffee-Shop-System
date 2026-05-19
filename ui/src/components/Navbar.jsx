@@ -18,9 +18,7 @@ function Navbar({
   const navigate = useNavigate();
   const location = useLocation();
 
-  const user = JSON.parse(
-    localStorage.getItem("user")
-  );
+  const user = JSON.parse(localStorage.getItem("user") || "null");
 
   const [search, setSearch] = useState("");
   const [suggestions, setSuggestions] = useState([]);
@@ -86,6 +84,12 @@ function Navbar({
     } else {
       navigate(`/products?cat=${cat.toLowerCase()}`);
     }
+  };
+
+  // ── Toggle the Messenger widget open/close ──
+  // Fires a custom event that Messenger.jsx listens for
+  const handleMessengerToggle = () => {
+    window.dispatchEvent(new CustomEvent("toggle-messenger"));
   };
 
   useEffect(() => {
@@ -185,6 +189,16 @@ function Navbar({
               </span>
             )}
           </Link>
+
+          {/* 💬 Messages button — toggles the Messenger widget */}
+          <button
+            className="action-btn action-btn--icon"
+            onClick={handleMessengerToggle}
+            title="Messages"
+            style={{ background: "none", border: "none", cursor: "pointer" }}
+          >
+            💬
+          </button>
 
         </div>
 

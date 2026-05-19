@@ -9,6 +9,13 @@ function Messenger({ userId }) {
   const [text, setText] = useState("");
   const bottomRef = useRef(null);
 
+  // ── Listen for the navbar 💬 button toggle ──
+  useEffect(() => {
+    const handleExternalToggle = () => setIsOpen((prev) => !prev);
+    window.addEventListener("toggle-messenger", handleExternalToggle);
+    return () => window.removeEventListener("toggle-messenger", handleExternalToggle);
+  }, []);
+
   const fetchMessages = async () => {
     if (!userId) return;
 
@@ -17,9 +24,9 @@ function Messenger({ userId }) {
         `http://localhost:5000/api/messages/conversation/${userId}/${ADMIN_ID}`
       );
       const data = await res.json();
-      setMessages(data);
+      setMessages(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.log(err);
+      console.log("Messenger fetch error:", err);
     }
   };
 
@@ -57,7 +64,11 @@ function Messenger({ userId }) {
     if (e.key === "Enter") sendMessage();
   };
 
-  if (!userId) return null;
+  // Don't render at all if no userId
+  if (!userId) {
+    console.warn("Messenger: no userId provided — widget hidden");
+    return null;
+  }
 
   return (
     <div className="messenger-widget">
@@ -101,7 +112,7 @@ function Messenger({ userId }) {
         </div>
       )}
 
-      {/* TOGGLE BUTTON */}
+      {/* TOGGLE BUTTON — bottom-right floating bubble */}
       <button
         className="messenger-toggle"
         onClick={() => setIsOpen((prev) => !prev)}

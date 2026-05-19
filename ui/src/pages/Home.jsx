@@ -1,11 +1,17 @@
 import Navbar from "../components/Navbar";
 import "./Home.css";
 import Messenger from "../components/Messenger";
-import { useNavigate } from "react-router-dom"; // 👈 add this
+import { useNavigate } from "react-router-dom";
 
 function Home({ setUser }) {
-  const user = JSON.parse(localStorage.getItem("user"));
-  const navigate = useNavigate(); // 👈 add this
+  const navigate = useNavigate();
+
+  // Safely parse user and try all common id field names
+  const user = JSON.parse(localStorage.getItem("user") || "null");
+  const userId = user?.user_id || user?.id || user?.userId || null;
+
+  console.log("Home.jsx — user object:", user);
+  console.log("Home.jsx — resolved userId:", userId);
 
   return (
     <>
@@ -20,14 +26,18 @@ function Home({ setUser }) {
           </h1>
           <p>Experience handcrafted coffee made with passion.</p>
 
-          <button onClick={() => navigate("/products")}> {/* 👈 add onClick */}
+          <button onClick={() => navigate("/products")}>
             Shop Now
           </button>
         </div>
       </div>
 
-      {/* 💬 REAL CHAT */}
-      <Messenger userId={user?.user_id} />
+      {/* 💬 MESSENGER WIDGET — only renders when userId is available */}
+      {userId ? (
+        <Messenger userId={userId} />
+      ) : (
+        <p style={{ display: "none" }}>No userId found — Messenger hidden</p>
+      )}
     </>
   );
 }
