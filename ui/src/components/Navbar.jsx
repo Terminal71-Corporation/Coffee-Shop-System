@@ -24,18 +24,17 @@ function Navbar({
 
   const [search, setSearch] = useState("");
   const [suggestions, setSuggestions] = useState([]);
+  const [profileImage, setProfileImage] = useState("");
 
   // ── Badge counts ──
   const [cartCount, setCartCount] = useState(0);
   const [activeOrderCount, setActiveOrderCount] = useState(0);
 
   const refreshBadges = () => {
-    // Cart: total quantity across all items
     const cart = JSON.parse(localStorage.getItem("cart") || "[]");
     const totalQty = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
     setCartCount(totalQty);
 
-    // Orders: active (not completed / voided / shipped)
     const orders = JSON.parse(localStorage.getItem("orders") || "[]");
     const active = orders.filter(
       (o) => o.status !== "completed" && o.status !== "voided" && o.status !== "shipped"
@@ -43,9 +42,23 @@ function Navbar({
     setActiveOrderCount(active);
   };
 
+  // ── Load profile picture ──
+  const refreshProfileImage = async () => {
+    const id = localStorage.getItem("user_id");
+    if (!id) return;
+    try {
+      const res = await fetch(`http://localhost:5000/users/${id}`);
+      const data = await res.json();
+      setProfileImage(data.profile_picture || "");
+    } catch {
+      setProfileImage("");
+    }
+  };
+
   useEffect(() => {
     refreshBadges();
-    const onStorage = () => refreshBadges();
+    refreshProfileImage();
+    const onStorage = () => { refreshBadges(); refreshProfileImage(); };
     window.addEventListener("storage", onStorage);
     const interval = setInterval(refreshBadges, 800);
     return () => {
@@ -90,6 +103,12 @@ function Navbar({
       });
   }, [search]);
 
+  const initials = user?.name
+    ? user.name.charAt(0).toUpperCase()
+    : user?.username
+    ? user.username.charAt(0).toUpperCase()
+    : "?";
+
   return (
     <header className="site-header">
 
@@ -98,12 +117,6 @@ function Navbar({
           Premium Coffee Experience ☕
         </span>
         <div className="topbar-right">
-          {user && (
-            <span>
-              Hi, <strong>{user.username}</strong>
-            </span>
-          )}
-          <Link to="/profile">My Account</Link>
           <button className="topbar-logout" onClick={handleLogout}>
             Logout
           </button>
@@ -149,13 +162,9 @@ function Navbar({
 
         <div className="navbar-actions">
 
-          <Link to="/home" className="action-btn">
-            🏠
-          </Link>
+          <Link to="/home" className="action-btn">🏠</Link>
 
-          <Link to="/products" className="action-btn">
-            ☕
-          </Link>
+          <Link to="/products" className="action-btn">☕</Link>
 
           {/* Cart with quantity badge */}
           <Link to="/cart" className="action-btn action-btn--icon">
@@ -178,6 +187,20 @@ function Navbar({
           </Link>
 
         </div>
+
+        {/* Profile avatar — pinned to far right of navbar */}
+        <Link to="/profile" className="action-btn action-btn--icon nav-avatar-link" title="My Account">
+          {profileImage ? (
+            <img
+              src={profileImage}
+              alt="profile"
+              className="nav-avatar-img"
+              onError={(e) => { e.target.style.display = "none"; }}
+            />
+          ) : (
+            <span className="nav-avatar-initials">{initials}</span>
+          )}
+        </Link>
 
       </nav>
 
