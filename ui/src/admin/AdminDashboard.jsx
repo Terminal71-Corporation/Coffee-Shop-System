@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import AdminNavbar from "./AdminNavbar";
 import AdminMessenger from "./AdminMessenger";
 import AdminOrdersBoard from "./AdminOrdersBoard";
@@ -24,6 +25,18 @@ const STATUS_STYLE = {
 };
 
 function AdminDashboard() {
+  const navigate = useNavigate();
+
+  // ── ADMIN GUARD ──
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user") || "null");
+    if (!user) {
+      navigate("/login");
+    } else if (user.role !== "admin") {
+      navigate("/home");
+    }
+  }, []);
+
   const [activeView, setActiveView] = useState("products");
   const [products, setProducts] = useState([]);
   const [users, setUsers] = useState([]);
@@ -87,10 +100,7 @@ function AdminDashboard() {
   // ======================
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const payload = {
-      ...form,
-      price: Number(form.price),
-    };
+    const payload = { ...form, price: Number(form.price) };
 
     try {
       if (editId) {
@@ -118,7 +128,7 @@ function AdminDashboard() {
   };
 
   // ======================
-  // DELETE PRODUCT
+  // DELETE / EDIT PRODUCT
   // ======================
   const deleteProduct = async (id) => {
     if (!window.confirm("Delete this product?")) return;
@@ -126,9 +136,6 @@ function AdminDashboard() {
     fetchProducts();
   };
 
-  // ======================
-  // EDIT PRODUCT
-  // ======================
   const editProduct = (product) => {
     setForm({
       name: product.name,
@@ -206,9 +213,7 @@ function AdminDashboard() {
                         }
                       </td>
                       <td>{p.name}</td>
-                      <td>
-                        <span className="category-badge">{p.category}</span>
-                      </td>
+                      <td><span className="category-badge">{p.category}</span></td>
                       <td>₱{p.price}</td>
                       <td>
                         <span
@@ -325,7 +330,6 @@ function AdminDashboard() {
                 required
               />
 
-              {/* STATUS DROPDOWN — replaces stock */}
               <select
                 value={form.status}
                 onChange={(e) => setForm({ ...form, status: e.target.value })}

@@ -37,11 +37,10 @@ function App() {
     };
 
     document.addEventListener("click", handleUserInteraction);
-
-    return () => {
-      document.removeEventListener("click", handleUserInteraction);
-    };
+    return () => document.removeEventListener("click", handleUserInteraction);
   }, []);
+
+  const isAdmin = user?.role === "admin";
 
   return (
     <>
@@ -58,7 +57,13 @@ function App() {
           {/* LOGIN */}
           <Route
             path="/login"
-            element={user ? <Navigate to="/home" /> : <Login setUser={setUser} />}
+            element={
+              user
+                ? isAdmin
+                  ? <Navigate to="/admin" />
+                  : <Navigate to="/home" />
+                : <Login setUser={setUser} />
+            }
           />
 
           {/* REGISTER */}
@@ -67,22 +72,28 @@ function App() {
             element={user ? <Navigate to="/home" /> : <Register setUser={setUser} />}
           />
 
-          {/* HOME */}
+          {/* HOME — regular users only */}
           <Route
             path="/home"
-            element={user ? <Home setUser={setUser} /> : <Navigate to="/login" />}
+            element={
+              !user
+                ? <Navigate to="/login" />
+                : isAdmin
+                  ? <Navigate to="/admin" />
+                  : <Home setUser={setUser} />
+            }
           />
 
           {/* PRODUCTS */}
           <Route
             path="/products"
-            element={user ? <Products setUser={setUser} /> : <Navigate to="/login" />}
+            element={user && !isAdmin ? <Products setUser={setUser} /> : <Navigate to="/login" />}
           />
 
-          {/* ITEM DETAIL — THIS WAS MISSING */}
+          {/* ITEM DETAIL */}
           <Route
             path="/item/:id"
-            element={user ? <ItemPage setUser={setUser} /> : <Navigate to="/login" />}
+            element={user && !isAdmin ? <ItemPage setUser={setUser} /> : <Navigate to="/login" />}
           />
 
           {/* PROFILE */}
@@ -94,27 +105,26 @@ function App() {
           {/* CART */}
           <Route
             path="/cart"
-            element={user ? <Cart setUser={setUser} /> : <Navigate to="/login" />}
+            element={user && !isAdmin ? <Cart setUser={setUser} /> : <Navigate to="/login" />}
           />
 
           {/* ORDERS */}
           <Route
             path="/orders"
-            element={user ? <Orders setUser={setUser} /> : <Navigate to="/login" />}
+            element={user && !isAdmin ? <Orders setUser={setUser} /> : <Navigate to="/login" />}
           />
 
-          {/* MESSAGES */}
+          {/* ADMIN — admin only, redirects regular users away */}
           <Route
-            path="/messages"
-            element={user ? (
-              <Navigate to="/home" />
-            ) : (
-              <Navigate to="/login" />
-            )}
+            path="/admin"
+            element={
+              !user
+                ? <Navigate to="/login" />
+                : isAdmin
+                  ? <AdminDashboard />
+                  : <Navigate to="/home" />
+            }
           />
-
-          {/* ADMIN */}
-          <Route path="/admin" element={<AdminDashboard />} />
 
           {/* FALLBACK */}
           <Route path="*" element={<Navigate to="/login" />} />

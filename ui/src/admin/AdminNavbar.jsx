@@ -2,8 +2,8 @@ function AdminNavbar({ activeView, setActiveView }) {
   const handleLogout = () => {
     const confirmLogout = window.confirm("Are you sure you want to logout?");
     if (confirmLogout) {
-      // clear auth if you have token later
-      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      localStorage.removeItem("user_id");
       window.location.href = "/login";
     }
   };
@@ -20,7 +20,6 @@ function AdminNavbar({ activeView, setActiveView }) {
       {/* MENU */}
       <div className="admin-menu">
 
-        {/* MAIN */}
         <div className="menu-section-title">MAIN</div>
 
         <div
@@ -51,15 +50,11 @@ function AdminNavbar({ activeView, setActiveView }) {
           💬 Messages
         </div>
 
-       
-        
-
       </div>
 
       {/* LOGOUT AT BOTTOM */}
       <div className="admin-logout">
         <div className="menu-divider"></div>
-
         <div className="menu-item logout" onClick={handleLogout}>
           🚪 Logout
         </div>

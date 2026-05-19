@@ -19,12 +19,12 @@ function Navbar({
   const location = useLocation();
 
   const user = JSON.parse(localStorage.getItem("user") || "null");
+  const isAdmin = user?.role === "admin";
 
   const [search, setSearch] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [profileImage, setProfileImage] = useState("");
 
-  // ── Badge counts ──
   const [cartCount, setCartCount] = useState(0);
   const [activeOrderCount, setActiveOrderCount] = useState(0);
 
@@ -40,7 +40,6 @@ function Navbar({
     setActiveOrderCount(active);
   };
 
-  // ── Load profile picture ──
   const refreshProfileImage = async () => {
     const id = localStorage.getItem("user_id");
     if (!id) return;
@@ -67,6 +66,7 @@ function Navbar({
 
   const handleLogout = () => {
     localStorage.removeItem("user");
+    localStorage.removeItem("user_id");
     setUser(null);
     navigate("/login");
   };
@@ -86,8 +86,6 @@ function Navbar({
     }
   };
 
-  // ── Toggle the Messenger widget open/close ──
-  // Fires a custom event that Messenger.jsx listens for
   const handleMessengerToggle = () => {
     window.dispatchEvent(new CustomEvent("toggle-messenger"));
   };
@@ -167,10 +165,9 @@ function Navbar({
         <div className="navbar-actions">
 
           <Link to="/home" className="action-btn">🏠</Link>
-
           <Link to="/products" className="action-btn">☕</Link>
 
-          {/* Cart with quantity badge */}
+          {/* Cart */}
           <Link to="/cart" className="action-btn action-btn--icon">
             🛒
             {cartCount > 0 && (
@@ -180,7 +177,7 @@ function Navbar({
             )}
           </Link>
 
-          {/* Orders with active-order badge */}
+          {/* Orders */}
           <Link to="/orders" className="action-btn action-btn--icon">
             📦
             {activeOrderCount > 0 && (
@@ -190,19 +187,33 @@ function Navbar({
             )}
           </Link>
 
-          {/* 💬 Messages button — toggles the Messenger widget */}
-          <button
-            className="action-btn action-btn--icon"
-            onClick={handleMessengerToggle}
-            title="Messages"
-            style={{ background: "none", border: "none", cursor: "pointer" }}
-          >
-            💬
-          </button>
+          {/* 💬 Messages — regular users only */}
+          {!isAdmin && (
+            <button
+              className="action-btn action-btn--icon"
+              onClick={handleMessengerToggle}
+              title="Messages"
+              style={{ background: "none", border: "none", cursor: "pointer" }}
+            >
+              💬
+            </button>
+          )}
+
+          {/* 🛡️ Admin Panel link — admin only */}
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className="action-btn action-btn--icon"
+              title="Admin Panel"
+              style={{ fontSize: "18px" }}
+            >
+              🛡️
+            </Link>
+          )}
 
         </div>
 
-        {/* Profile avatar — pinned to far right of navbar */}
+        {/* Profile avatar */}
         <Link to="/profile" className="action-btn action-btn--icon nav-avatar-link" title="My Account">
           {profileImage ? (
             <img
