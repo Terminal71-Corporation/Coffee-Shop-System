@@ -24,18 +24,19 @@ const FULFILLMENT_LABELS = {
 };
 
 const TABS = [
-  { key: "all",        label: "All Orders" },
+  
   { key: "ordered",    label: "Order Placed" },
   { key: "ready",      label: "Ready for Pick-up" },
   { key: "delivering", label: "Delivering" },
   { key: "shipped",    label: "Shipped / Received" },
   { key: "completed",  label: "Completed" },
   { key: "voided",     label: "Voided" },
+  { key: "all",        label: "All Orders" },
 ];
 
 function Orders({ setUser }) {
   const [orders, setOrders] = useState([]);
-  const [filter, setFilter] = useState("all");
+  const [filter, setFilter] = useState("ordered");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -50,12 +51,7 @@ function Orders({ setUser }) {
     setOrders([...stored].reverse());
   };
 
-  const clearOrders = () => {
-    if (window.confirm("Clear all order history?")) {
-      localStorage.setItem("orders", JSON.stringify([]));
-      setOrders([]);
-    }
-  };
+  
 
   const filtered =
     filter === "all" ? orders : orders.filter((o) => o.status === filter);
@@ -66,9 +62,7 @@ function Orders({ setUser }) {
       <div className="orders-page">
         <div className="orders-header">
           <h1>📦 My Orders</h1>
-          {orders.length > 0 && (
-            <button className="orders-clear-btn" onClick={clearOrders}>Clear History</button>
-          )}
+          
         </div>
 
         <div className="orders-tabs">
