@@ -74,7 +74,7 @@ const PAYMENT_META = {
 // ── Helpers ───────────────────────────────────────────────────────
 function getNextStatus(order) {
   if (order.status === "voided") return null;
-  const flow = order.fulfillment === "delivery" ? DELIVERY_FLOW : COUNTER_FLOW;
+  const flow = order.fulfillment === "counter" ? COUNTER_FLOW : DELIVERY_FLOW;
   const idx = flow.indexOf(order.status);
   return idx >= 0 && idx < flow.length - 1 ? flow[idx + 1] : null;
 }
@@ -166,7 +166,7 @@ export default function AdminOrdersBoard() {
     if (!dragItem.current) return;
     const order = dragItem.current;
     if (order.status === "voided" || colKey === "voided") return; // can't drag to/from voided
-    const flow = order.fulfillment === "delivery" ? DELIVERY_FLOW : COUNTER_FLOW;
+    const flow = order.fulfillment === "counter" ? COUNTER_FLOW : DELIVERY_FLOW;
     if (!flow.includes(colKey)) return;
     if (order.status === colKey) return;
     updateStatus(order.orderId, colKey);
@@ -182,7 +182,8 @@ export default function AdminOrdersBoard() {
   // ── Filter orders per column ──
   const filteredOrders = orders.filter((o) => {
     if (filter === "counter") return o.fulfillment === "counter";
-    if (filter === "delivery") return o.fulfillment === "delivery";
+    if (filter === "delivery") return o.fulfillment !== "counter";
+
     return true;
   });
 
