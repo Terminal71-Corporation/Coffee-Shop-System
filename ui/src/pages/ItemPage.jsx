@@ -3,6 +3,12 @@ import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import "./ItemPage.css";
 
+const STATUS_STYLE = {
+  "Available":     { color: "#3cb371", bg: "rgba(46,139,87,0.2)",   border: "rgba(46,139,87,0.3)" },
+  "Not Available": { color: "#e74c3c", bg: "rgba(192,57,43,0.2)",   border: "rgba(192,57,43,0.3)" },
+  "Best Seller":   { color: "#d4a055", bg: "rgba(212,160,85,0.2)",  border: "rgba(212,160,85,0.3)" },
+};
+
 function ItemPage({ setUser }) {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -18,7 +24,6 @@ function ItemPage({ setUser }) {
       try {
         const res = await fetch(`http://localhost:5000/products/${id}`);
         const data = await res.json();
-        // If the backend returns an error message instead of a product object
         if (data.message) {
           setProduct(null);
         } else {
@@ -40,6 +45,7 @@ function ItemPage({ setUser }) {
   };
 
   const handleAddToCart = () => {
+    if (product.status === "Not Available") return;
     const cartItem = {
       ...product,
       quantity,
@@ -53,6 +59,7 @@ function ItemPage({ setUser }) {
   };
 
   const handlePurchase = () => {
+    if (product.status === "Not Available") return;
     const order = {
       ...product,
       quantity,
@@ -98,6 +105,9 @@ function ItemPage({ setUser }) {
       : "https://via.placeholder.com/600x500?text=No+Image";
 
   const total = (parseFloat(product.price) * quantity).toFixed(2);
+  const productStatus = product.status || "Available";
+  const statusStyle = STATUS_STYLE[productStatus] || STATUS_STYLE["Available"];
+  const isUnavailable = productStatus === "Not Available";
 
   return (
     <>
@@ -140,13 +150,17 @@ function ItemPage({ setUser }) {
 
             <div className="item-price-row">
               <span className="item-price">₱{product.price}</span>
-              {product.stock > 0 ? (
-                <span className="item-stock in-stock">
-                  In Stock ({product.stock})
-                </span>
-              ) : (
-                <span className="item-stock out-stock">Out of Stock</span>
-              )}
+              {/* STATUS BADGE — replaces stock */}
+              <span
+                className="item-stock"
+                style={{
+                  color: statusStyle.color,
+                  background: statusStyle.bg,
+                  border: `1px solid ${statusStyle.border}`,
+                }}
+              >
+                {productStatus}
+              </span>
             </div>
 
             {product.description && (
@@ -166,6 +180,7 @@ function ItemPage({ setUser }) {
                 placeholder="e.g. extra shot, less sugar, oat milk..."
                 value={addons}
                 onChange={(e) => setAddons(e.target.value)}
+                disabled={isUnavailable}
               />
             </div>
 
@@ -176,23 +191,18 @@ function ItemPage({ setUser }) {
                 <button
                   className="item-qty-btn"
                   onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                  disabled={isUnavailable}
                 >
                   −
                 </button>
                 <span className="item-qty-value">{quantity}</span>
                 <button
                   className="item-qty-btn"
-                  onClick={() =>
-                    setQuantity((q) =>
-                      product.stock ? Math.min(product.stock, q + 1) : q + 1
-                    )
-                  }
+                  onClick={() => setQuantity((q) => q + 1)}
+                  disabled={isUnavailable}
                 >
                   +
                 </button>
-                <span className="item-qty-stock">
-                  {product.stock ? `${product.stock} available` : ""}
-                </span>
               </div>
             </div>
 
@@ -202,19 +212,19 @@ function ItemPage({ setUser }) {
               <span className="item-total-value">₱{total}</span>
             </div>
 
-            {/* BUTTONS — Add to Cart + Buy Now */}
+            {/* BUTTONS */}
             <div className="item-action-buttons">
               <button
                 className="item-cart-btn"
                 onClick={handleAddToCart}
-                disabled={product.stock === 0}
+                disabled={isUnavailable}
               >
                 🛒 Add to Cart
               </button>
               <button
                 className="item-buy-btn"
                 onClick={handlePurchase}
-                disabled={product.stock === 0}
+                disabled={isUnavailable}
               >
                 Buy Now
               </button>

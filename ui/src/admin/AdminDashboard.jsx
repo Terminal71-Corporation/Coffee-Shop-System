@@ -10,33 +10,30 @@ const FIXED_CATEGORIES = [
   "Espresso",
   "Latte",
   "Tea",
+  "Pastries",
+  "Beans",
+  "Equipment",
 ];
 
-function AdminDashboard() {
-  // ======================
-  // VIEW STATE
-  // ======================
-  const [activeView, setActiveView] = useState("products");
+const PRODUCT_STATUSES = ["Available", "Not Available", "Best Seller"];
 
-  // ======================
-  // DATA
-  // ======================
+const STATUS_STYLE = {
+  "Available":     { color: "#3cb371", bg: "rgba(46,139,87,0.15)" },
+  "Not Available": { color: "#e74c3c", bg: "rgba(192,57,43,0.15)" },
+  "Best Seller":   { color: "#d4a055", bg: "rgba(212,160,85,0.15)" },
+};
+
+function AdminDashboard() {
+  const [activeView, setActiveView] = useState("products");
   const [products, setProducts] = useState([]);
   const [users, setUsers] = useState([]);
-
-  // ======================
-  // MODAL STATE
-  // ======================
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // ======================
-  // FORM STATE
-  // ======================
   const [form, setForm] = useState({
     name: "",
     category: "",
     price: "",
-    stock: "",
+    status: "Available",
     image_url: "",
   });
 
@@ -44,7 +41,7 @@ function AdminDashboard() {
   const [imagePreview, setImagePreview] = useState(null);
 
   // ======================
-  // FETCH PRODUCTS
+  // FETCH
   // ======================
   const fetchProducts = async () => {
     try {
@@ -56,9 +53,6 @@ function AdminDashboard() {
     }
   };
 
-  // ======================
-  // FETCH USERS
-  // ======================
   const fetchUsers = async () => {
     try {
       const res = await fetch("http://localhost:5000/users");
@@ -80,7 +74,6 @@ function AdminDashboard() {
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onloadend = () => {
       setImagePreview(reader.result);
@@ -90,15 +83,13 @@ function AdminDashboard() {
   };
 
   // ======================
-  // SUBMIT PRODUCT
+  // SUBMIT
   // ======================
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     const payload = {
       ...form,
       price: Number(form.price),
-      stock: Number(form.stock),
     };
 
     try {
@@ -117,7 +108,7 @@ function AdminDashboard() {
       }
 
       setEditId(null);
-      setForm({ name: "", category: "", price: "", stock: "", image_url: "" });
+      setForm({ name: "", category: "", price: "", status: "Available", image_url: "" });
       setImagePreview(null);
       setIsModalOpen(false);
       fetchProducts();
@@ -131,7 +122,6 @@ function AdminDashboard() {
   // ======================
   const deleteProduct = async (id) => {
     if (!window.confirm("Delete this product?")) return;
-
     await fetch(`http://localhost:5000/products/${id}`, { method: "DELETE" });
     fetchProducts();
   };
@@ -144,18 +134,17 @@ function AdminDashboard() {
       name: product.name,
       category: product.category,
       price: product.price,
-      stock: product.stock,
-      image_url: product.image_url,
+      status: product.status || "Available",
+      image_url: product.image_url || "",
     });
-
-    setImagePreview(product.image_url);
+    setImagePreview(product.image_url || null);
     setEditId(product.product_id);
     setIsModalOpen(true);
   };
 
   const cancelEdit = () => {
     setEditId(null);
-    setForm({ name: "", category: "", price: "", stock: "", image_url: "" });
+    setForm({ name: "", category: "", price: "", status: "Available", image_url: "" });
     setImagePreview(null);
     setIsModalOpen(false);
   };
@@ -165,7 +154,6 @@ function AdminDashboard() {
   // ======================
   const deleteUser = async (id) => {
     if (!window.confirm("Delete this user?")) return;
-
     await fetch(`http://localhost:5000/users/${id}`, { method: "DELETE" });
     fetchUsers();
   };
@@ -173,10 +161,8 @@ function AdminDashboard() {
   return (
     <div className="admin-layout">
 
-      {/* SIDEBAR */}
       <AdminNavbar activeView={activeView} setActiveView={setActiveView} />
 
-      {/* CONTENT */}
       <div className="admin-content">
 
         {/* ================= PRODUCTS ================= */}
@@ -188,7 +174,7 @@ function AdminDashboard() {
                 className="add-btn admin-submit-btn"
                 onClick={() => {
                   setEditId(null);
-                  setForm({ name: "", category: "", price: "", stock: "", image_url: "" });
+                  setForm({ name: "", category: "", price: "", status: "Available", image_url: "" });
                   setImagePreview(null);
                   setIsModalOpen(true);
                 }}
@@ -198,20 +184,47 @@ function AdminDashboard() {
             </div>
 
             <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Image</th>
+                  <th>Name</th>
+                  <th>Category</th>
+                  <th>Price</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
               <tbody>
-                {products.map((p) => (
-                  <tr key={p.product_id}>
-                    <td><img src={p.image_url} className="table-image" /></td>
-                    <td>{p.name}</td>
-                    <td>{p.category}</td>
-                    <td>₱{p.price}</td>
-                    <td>{p.stock}</td>
-                    <td>
-                      <button className="edit-btn" onClick={() => editProduct(p)}>Edit</button>
-                      <button className="delete-btn" onClick={() => deleteProduct(p.product_id)}>Delete</button>
-                    </td>
-                  </tr>
-                ))}
+                {products.map((p) => {
+                  const s = STATUS_STYLE[p.status] || STATUS_STYLE["Available"];
+                  return (
+                    <tr key={p.product_id}>
+                      <td>
+                        {p.image_url
+                          ? <img src={p.image_url} className="table-image" alt={p.name} />
+                          : <div className="no-image-placeholder">No Image</div>
+                        }
+                      </td>
+                      <td>{p.name}</td>
+                      <td>
+                        <span className="category-badge">{p.category}</span>
+                      </td>
+                      <td>₱{p.price}</td>
+                      <td>
+                        <span
+                          className="category-badge"
+                          style={{ background: s.bg, color: s.color, borderColor: s.color + "55" }}
+                        >
+                          {p.status || "Available"}
+                        </span>
+                      </td>
+                      <td>
+                        <button className="edit-btn" onClick={() => editProduct(p)}>Edit</button>
+                        <button className="delete-btn" onClick={() => deleteProduct(p.product_id)}>Delete</button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </>
@@ -222,14 +235,38 @@ function AdminDashboard() {
           <>
             <h1 className="admin-title">Users</h1>
             <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
               <tbody>
                 {users.map((u) => (
                   <tr key={u.user_id}>
                     <td>{u.name}</td>
                     <td>{u.email}</td>
-                    <td>{u.role}</td>
                     <td>
-                      <button className="delete-btn" onClick={() => deleteUser(u.user_id)}>Delete</button>
+                      <span
+                        className="category-badge"
+                        style={u.role === "admin"
+                          ? { background: "rgba(231,76,60,0.2)", color: "#e74c3c" }
+                          : {}}
+                      >
+                        {u.role}
+                      </span>
+                    </td>
+                    <td>
+                      <button
+                        className="delete-btn"
+                        onClick={() => deleteUser(u.user_id)}
+                        disabled={u.role === "admin"}
+                        style={u.role === "admin" ? { opacity: 0.4, cursor: "not-allowed" } : {}}
+                      >
+                        Delete
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -238,7 +275,7 @@ function AdminDashboard() {
           </>
         )}
 
-        {/* ================= ORDERS (Trello Board) ================= */}
+        {/* ================= ORDERS ================= */}
         {activeView === "orders" && (
           <>
             <h1 className="admin-title">Orders Board</h1>
@@ -262,34 +299,47 @@ function AdminDashboard() {
           <div className="modal-box">
             <h2>{editId ? "Edit Product" : "Add Product"}</h2>
             <form className="modal-form" onSubmit={handleSubmit}>
+
               <input
                 placeholder="Product Name"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
+                required
               />
+
               <select
                 value={form.category}
                 onChange={(e) => setForm({ ...form, category: e.target.value })}
               >
-                <option value="">Category</option>
+                <option value="">Select Category</option>
                 {FIXED_CATEGORIES.map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
               </select>
+
               <input
                 type="number"
                 placeholder="Price"
                 value={form.price}
                 onChange={(e) => setForm({ ...form, price: e.target.value })}
+                required
               />
-              <input
-                type="number"
-                placeholder="Stock"
-                value={form.stock}
-                onChange={(e) => setForm({ ...form, stock: e.target.value })}
-              />
+
+              {/* STATUS DROPDOWN — replaces stock */}
+              <select
+                value={form.status}
+                onChange={(e) => setForm({ ...form, status: e.target.value })}
+              >
+                {PRODUCT_STATUSES.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+
               <input type="file" accept="image/*" onChange={handleImageUpload} />
-              {imagePreview && <img src={imagePreview} className="preview-image" />}
+              {imagePreview && (
+                <img src={imagePreview} className="preview-image" alt="preview" />
+              )}
+
               <div className="modal-actions">
                 <button type="submit">{editId ? "Update" : "Add"}</button>
                 <button type="button" onClick={cancelEdit}>Cancel</button>

@@ -41,15 +41,16 @@ const getProductById = async (req, res) => {
 // ADD PRODUCT
 // =====================================
 const addProduct = async (req, res) => {
-  const { name, description, category, price, stock, image_url } = req.body;
+  const { name, description, category, price, status, image_url } = req.body;
   try {
     await db.query(`
-      INSERT INTO products (name, description, category, price, stock, image_url)
+      INSERT INTO products (name, description, category, price, status, image_url)
       VALUES (?, ?, ?, ?, ?, ?)
-    `, [name, description, category, price, stock, image_url]);
+    `, [name, description, category, price, status || "Available", image_url]);
 
     res.status(201).json({ message: "Product added successfully" });
   } catch (err) {
+    console.log(err);
     res.status(500).json({ message: "Failed to add product" });
   }
 };
@@ -59,13 +60,13 @@ const addProduct = async (req, res) => {
 // =====================================
 const updateProduct = async (req, res) => {
   const { id } = req.params;
-  const { name, description, category, price, stock, image_url } = req.body;
+  const { name, description, category, price, status, image_url } = req.body;
   try {
     await db.query(`
       UPDATE products
-      SET name = ?, description = ?, category = ?, price = ?, stock = ?, image_url = ?
+      SET name = ?, description = ?, category = ?, price = ?, status = ?, image_url = ?
       WHERE product_id = ?
-    `, [name, description, category, price, stock, image_url, id]);
+    `, [name, description, category, price, status, image_url, id]);
 
     res.json({ message: "Product updated successfully" });
   } catch (err) {
