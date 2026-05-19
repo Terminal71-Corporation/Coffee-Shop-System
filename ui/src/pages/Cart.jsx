@@ -102,7 +102,7 @@ function Cart({ setUser }) {
       orderId: Date.now() + Math.random(),
       orderNumber,
       date: now,
-      status: "ordered",
+      status: paymentMethod === "gcash" ? "pending_payment" : "preparing",
       fulfillment,
       paymentMethod,
       deliveryInfo: deliveryInfo || null,

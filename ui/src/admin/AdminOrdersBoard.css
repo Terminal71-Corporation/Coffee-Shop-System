@@ -644,3 +644,120 @@
   color: #e74c3c;
   transform: translateY(-1px);
 }
+
+/* ── Channel Switcher (matches customer dashboard pill tabs) ── */
+.aob-channel-switcher {
+  display: flex;
+  gap: 0;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 30px;
+  padding: 4px;
+}
+
+.aob-channel-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: rgba(255, 255, 255, 0.45);
+  padding: 8px 22px;
+  border-radius: 24px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 600;
+  font-family: "Georgia", serif;
+  transition: all 0.22s ease;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+.aob-channel-btn:hover {
+  color: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.06);
+}
+.aob-channel-btn.active {
+  background: rgba(212, 160, 85, 0.18);
+  border-color: rgba(212, 160, 85, 0.55);
+  color: #d4a055;
+  box-shadow: 0 2px 10px rgba(212, 160, 85, 0.15);
+}
+
+/* ── Clear Orders button ── */
+.aob-clear-btn {
+  background: rgba(231, 76, 60, 0.08);
+  border: 1px solid rgba(231, 76, 60, 0.28);
+  color: rgba(231, 76, 60, 0.7);
+  padding: 7px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-family: "Georgia", serif;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.aob-clear-btn:hover {
+  background: rgba(231, 76, 60, 0.18);
+  border-color: rgba(231, 76, 60, 0.5);
+  color: #e74c3c;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.18);
+}
+
+/* ── Pending Payment ribbon (orange) ── */
+.aob-pending-ribbon {
+  background: rgba(230, 126, 34, 0.12);
+  border: 1px solid rgba(230, 126, 34, 0.35);
+  color: #e67e22;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-align: center;
+  padding: 5px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  animation: aob-pulse 1s ease-in-out infinite alternate;
+}
+
+/* ── GCash Reference display on card ── */
+.aob-gcash-ref-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 180, 255, 0.07);
+  border: 1px solid rgba(0, 180, 255, 0.22);
+  border-radius: 8px;
+  padding: 6px 10px;
+  margin-bottom: 8px;
+}
+
+.aob-gcash-ref-label-small {
+  color: #00b4ff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.aob-gcash-ref-value {
+  color: white;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  font-family: monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Locked advance hint ── */
+.aob-locked-hint {
+  width: 100%;
+  background: rgba(230, 126, 34, 0.07);
+  border: 1px dashed rgba(230, 126, 34, 0.35);
+  color: rgba(230, 126, 34, 0.75);
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.4;
+}

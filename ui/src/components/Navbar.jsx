@@ -145,15 +145,6 @@ function Navbar({ setUser, activeCategory, setActiveCategory }) {
           {/* 🔔 Notifications — all users */}
           <NotificationBell userId={userId} />
 
-          {/* 💬 Messages — regular users only */}
-          {!isAdmin && (
-            <button
-              className="action-btn action-btn--icon"
-              onClick={handleMessengerToggle}
-              title="Messages"
-              style={{ background: "none", border: "none", cursor: "pointer" }}
-            >💬</button>
-          )}
 
           {/* 🛡️ Admin panel — admin only */}
           {isAdmin && (

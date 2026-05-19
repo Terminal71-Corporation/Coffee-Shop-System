@@ -1,14 +1,23 @@
 import { useEffect, useState, useRef } from "react";
 
 // ── Status config ─────────────────────────────────────────────────
-const COUNTER_FLOW = ["ordered", "ready", "completed"];
-const DELIVERY_FLOW = ["ordered", "delivering", "shipped"];
+const COUNTER_FLOW  = ["pending_payment", "preparing", "ready", "completed"];
+const DELIVERY_FLOW = ["pending_payment", "preparing", "delivering", "shipped"];
 
 const COLUMNS = [
   {
-    key: "ordered",
-    label: "Order Placed",
-    icon: "🧾",
+    key: "pending_payment",
+    label: "Pending Payment",
+    icon: "⏳",
+    color: "#e67e22",
+    colorBg: "rgba(230,126,34,0.10)",
+    colorBorder: "rgba(230,126,34,0.28)",
+    colorGlow: "rgba(230,126,34,0.18)",
+  },
+  {
+    key: "preparing",
+    label: "Preparing",
+    icon: "☕",
     color: "#d4a055",
     colorBg: "rgba(212,160,85,0.10)",
     colorBorder: "rgba(212,160,85,0.25)",
@@ -55,6 +64,16 @@ const COLUMNS = [
     onlyFor: "counter",
   },
   {
+    key: "cancelled",
+    label: "Cancelled",
+    icon: "❌",
+    color: "#e74c3c",
+    colorBg: "rgba(231,76,60,0.10)",
+    colorBorder: "rgba(231,76,60,0.25)",
+    colorGlow: "rgba(231,76,60,0.18)",
+    onlyFor: "delivery",
+  },
+  {
     key: "voided",
     label: "Voided",
     icon: "🚫",
@@ -66,14 +85,16 @@ const COLUMNS = [
 ];
 
 const PAYMENT_META = {
-  gcash: { label: "GCash",            icon: "📱", color: "#00b4ff" },
-  cash:  { label: "Cash to Counter",  icon: "💵", color: "#27ae60" },
-  cod:   { label: "COD",              icon: "🚗", color: "#d4a055" },
+  gcash: { label: "GCash",           icon: "📱", color: "#00b4ff" },
+  cash:  { label: "Cash to Counter", icon: "💵", color: "#27ae60" },
+  cod:   { label: "COD",             icon: "🚗", color: "#d4a055" },
 };
 
 // ── Helpers ───────────────────────────────────────────────────────
 function getNextStatus(order) {
-  if (order.status === "voided") return null;
+  if (order.status === "voided" || order.status === "cancelled") return null;
+  // GCash pending_payment: only admin can advance after confirming gcashPaid
+  if (order.status === "pending_payment" && order.paymentMethod === "gcash" && !order.gcashPaid) return null;
   const flow = order.fulfillment === "counter" ? COUNTER_FLOW : DELIVERY_FLOW;
   const idx = flow.indexOf(order.status);
   return idx >= 0 && idx < flow.length - 1 ? flow[idx + 1] : null;
@@ -92,14 +113,18 @@ function saveOrders(orders) {
   localStorage.setItem("orders", JSON.stringify(orders));
 }
 
+// Terminal statuses that can be cleared
+const TERMINAL = new Set(["completed", "voided", "cancelled"]);
+
 // ── Main Component ────────────────────────────────────────────────
 export default function AdminOrdersBoard() {
-  const [orders, setOrders] = useState([]);
-  const [dragId, setDragId] = useState(null);
-  const [dragOver, setDragOver] = useState(null);
-  const [expandedId, setExpandedId] = useState(null);
-  const [filter, setFilter] = useState("all"); // all | counter | delivery
-  const [voidConfirmId, setVoidConfirmId] = useState(null); // order pending void confirmation
+  const [orders, setOrders]           = useState([]);
+  const [dragId, setDragId]           = useState(null);
+  const [dragOver, setDragOver]       = useState(null);
+  const [expandedId, setExpandedId]   = useState(null);
+  const [channel, setChannel]         = useState("counter");
+  const [voidConfirmId, setVoidConfirmId] = useState(null);
+  const [clearConfirm, setClearConfirm]   = useState(false);
   const dragItem = useRef(null);
 
   useEffect(() => {
@@ -118,11 +143,8 @@ export default function AdminOrdersBoard() {
     saveOrders(updated);
   };
 
-  // ── Void / Cancel order ──
-  const voidOrder = (orderId) => {
-    setVoidConfirmId(orderId);
-  };
-
+  // ── Void order ──
+  const voidOrder = (orderId) => setVoidConfirmId(orderId);
   const confirmVoid = () => {
     if (!voidConfirmId) return;
     const updated = orders.map((o) =>
@@ -134,16 +156,35 @@ export default function AdminOrdersBoard() {
     saveOrders(updated);
     setVoidConfirmId(null);
   };
-
   const cancelVoid = () => setVoidConfirmId(null);
 
-  // ── Toggle GCash payment confirmed ──
+  // ── Toggle GCash paid → auto-advance to preparing ──
   const toggleGcashPaid = (orderId) => {
-    const updated = orders.map((o) =>
-      String(o.orderId) === String(orderId) ? { ...o, gcashPaid: !o.gcashPaid } : o
-    );
+    const updated = orders.map((o) => {
+      if (String(o.orderId) !== String(orderId)) return o;
+      const nowPaid = !o.gcashPaid;
+      // If marking as paid and order is still in pending_payment → advance to preparing
+      if (nowPaid && o.status === "pending_payment") {
+        return { ...o, gcashPaid: true, status: "preparing" };
+      }
+      return { ...o, gcashPaid: nowPaid };
+    });
     setOrders(updated);
     saveOrders(updated);
+  };
+
+  // ── Clear terminal orders for current channel ──
+  const confirmClear = () => {
+    const updated = orders.filter((o) => {
+      const matchChannel =
+        channel === "counter"
+          ? o.fulfillment === "counter" || !o.fulfillment
+          : o.fulfillment === "delivery";
+      return !(matchChannel && TERMINAL.has(o.status));
+    });
+    setOrders(updated);
+    saveOrders(updated);
+    setClearConfirm(false);
   };
 
   // ── Drag handlers ──
@@ -152,54 +193,53 @@ export default function AdminOrdersBoard() {
     setDragId(order.orderId);
     e.dataTransfer.effectAllowed = "move";
   };
-
   const onDragOver = (e, colKey) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
     setDragOver(colKey);
   };
-
   const onDrop = (e, colKey) => {
     e.preventDefault();
     setDragOver(null);
     setDragId(null);
     if (!dragItem.current) return;
     const order = dragItem.current;
-    if (order.status === "voided" || colKey === "voided") return; // can't drag to/from voided
+    if (order.status === "voided" || order.status === "cancelled" || colKey === "voided") return;
     const flow = order.fulfillment === "counter" ? COUNTER_FLOW : DELIVERY_FLOW;
     if (!flow.includes(colKey)) return;
     if (order.status === colKey) return;
     updateStatus(order.orderId, colKey);
     dragItem.current = null;
   };
-
   const onDragEnd = () => {
     setDragId(null);
     setDragOver(null);
     dragItem.current = null;
   };
 
-  // ── Filter orders per column ──
-  const filteredOrders = orders.filter((o) => {
-    if (filter === "counter") return o.fulfillment === "counter";
-    if (filter === "delivery") return o.fulfillment !== "counter";
+  // ── Filter by channel — normalise legacy "ordered" → "preparing" ──
+  const channelOrders = orders
+    .map((o) => o.status === "ordered" ? { ...o, status: "preparing" } : o)
+    .filter((o) =>
+      channel === "counter"
+        ? o.fulfillment === "counter" || !o.fulfillment
+        : o.fulfillment === "delivery"
+    );
 
-    return true;
-  });
+  const ordersForCol  = (colKey) => channelOrders.filter((o) => o.status === colKey);
+  const terminalCount = channelOrders.filter((o) => TERMINAL.has(o.status)).length;
 
-  const ordersForCol = (colKey) =>
-    filteredOrders.filter((o) => o.status === colKey);
-
-  // ── Visible columns ──
-  const visibleCols = COLUMNS.filter((col) => {
-    if (filter === "counter") return !col.onlyFor || col.onlyFor === "counter";
-    if (filter === "delivery") return !col.onlyFor || col.onlyFor === "delivery";
-    return true;
-  });
+  const visibleCols = COLUMNS.filter((col) =>
+    channel === "counter"
+      ? !col.onlyFor || col.onlyFor === "counter"
+      : !col.onlyFor || col.onlyFor === "delivery"
+  );
 
   const pendingVoidOrder = voidConfirmId
     ? orders.find((o) => String(o.orderId) === String(voidConfirmId))
     : null;
+
+  const totalVisible = channelOrders.length;
 
   return (
     <div className="aob-root">
@@ -222,32 +262,67 @@ export default function AdminOrdersBoard() {
               This will cancel the order and notify the customer. This action cannot be undone.
             </p>
             <div className="aob-void-actions">
-              <button className="aob-void-confirm-btn" onClick={confirmVoid}>
-                Yes, Void Order
+              <button className="aob-void-confirm-btn" onClick={confirmVoid}>Yes, Void Order</button>
+              <button className="aob-void-cancel-btn" onClick={cancelVoid}>Keep Order</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Clear Confirm Modal ── */}
+      {clearConfirm && (
+        <div className="aob-void-overlay">
+          <div className="aob-void-modal">
+            <div className="aob-void-icon">🗑️</div>
+            <h3>Clear Orders?</h3>
+            <p className="aob-void-order-num">
+              {channel === "counter" ? "🏪 Store / Counter" : "🚚 Online / Delivery"}
+            </p>
+            <p className="aob-void-warning">
+              This will permanently remove all <strong>completed</strong>, <strong>voided</strong>, and <strong>cancelled</strong> orders from the <strong>{channel === "counter" ? "Counter" : "Delivery"}</strong> channel. Active orders will not be affected.
+            </p>
+            <div className="aob-void-actions">
+              <button className="aob-void-confirm-btn" onClick={confirmClear}>
+                🗑️ Yes, Clear {terminalCount} Order{terminalCount !== 1 ? "s" : ""}
               </button>
-              <button className="aob-void-cancel-btn" onClick={cancelVoid}>
-                Keep Order
+              <button className="aob-void-cancel-btn" onClick={() => setClearConfirm(false)}>
+                Cancel
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── Toolbar ── */}
+      {/* ── Channel Switcher + Actions ── */}
       <div className="aob-toolbar">
-        <div className="aob-filter-group">
-          {["all", "counter", "delivery"].map((f) => (
-            <button
-              key={f}
-              className={`aob-filter-btn ${filter === f ? "active" : ""}`}
-              onClick={() => setFilter(f)}
-            >
-              {f === "all" ? "All Orders" : f === "counter" ? "🏪 Counter" : "🚗 Delivery"}
-            </button>
-          ))}
+        <div className="aob-channel-switcher">
+          <button
+            className={`aob-channel-btn ${channel === "counter" ? "active" : ""}`}
+            onClick={() => setChannel("counter")}
+          >
+            🏪 Store / Counter
+          </button>
+          <button
+            className={`aob-channel-btn ${channel === "delivery" ? "active" : ""}`}
+            onClick={() => setChannel("delivery")}
+          >
+            🚚 Online / Delivery
+          </button>
         </div>
-        <div className="aob-total-pill">
-          {filteredOrders.length} order{filteredOrders.length !== 1 ? "s" : ""}
+
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          {terminalCount > 0 && (
+            <button
+              className="aob-clear-btn"
+              onClick={() => setClearConfirm(true)}
+              title={`Clear ${terminalCount} completed/voided/cancelled order(s)`}
+            >
+              🗑️ Clear {terminalCount}
+            </button>
+          )}
+          <div className="aob-total-pill">
+            {totalVisible} order{totalVisible !== 1 ? "s" : ""}
+          </div>
         </div>
       </div>
 
@@ -255,35 +330,30 @@ export default function AdminOrdersBoard() {
       <div className="aob-board">
         {visibleCols.map((col) => {
           const colOrders = ordersForCol(col.key);
-          const isOver = dragOver === col.key;
+          const isOver    = dragOver === col.key;
 
           return (
             <div
               key={col.key}
               className={`aob-column ${isOver ? "aob-column--over" : ""}`}
               style={{
-                "--col-color": col.color,
-                "--col-bg": col.colorBg,
+                "--col-color":  col.color,
+                "--col-bg":     col.colorBg,
                 "--col-border": col.colorBorder,
-                "--col-glow": col.colorGlow,
+                "--col-glow":   col.colorGlow,
               }}
               onDragOver={(e) => onDragOver(e, col.key)}
               onDrop={(e) => onDrop(e, col.key)}
               onDragLeave={() => setDragOver(null)}
             >
-              {/* Column header */}
               <div className="aob-col-header">
                 <span className="aob-col-icon">{col.icon}</span>
                 <span className="aob-col-label">{col.label}</span>
                 <span className="aob-col-count">{colOrders.length}</span>
               </div>
 
-              {/* Drop zone hint */}
-              {isOver && (
-                <div className="aob-drop-hint">Drop here</div>
-              )}
+              {isOver && <div className="aob-drop-hint">Drop here</div>}
 
-              {/* Cards */}
               <div className="aob-cards">
                 {colOrders.length === 0 && !isOver && (
                   <div className="aob-empty-col">No orders</div>
@@ -319,41 +389,46 @@ export default function AdminOrdersBoard() {
 
 // ── Order Card ────────────────────────────────────────────────────
 function OrderCard({ order, col, isDragging, expanded, onToggle, onAdvance, onToggleGcash, onVoid, onDragStart, onDragEnd }) {
-  const next = getNextStatus(order);
-  const nextLabel = next ? getNextLabel(next) : null;
-  const payment = PAYMENT_META[order.paymentMethod] || null;
-  const isVoided = order.status === "voided";
+  const next        = getNextStatus(order);
+  const nextLabel   = next ? getNextLabel(next) : null;
+  const payment     = PAYMENT_META[order.paymentMethod] || null;
+  const isVoided    = order.status === "voided";
+  const isCancelled = order.status === "cancelled";
+  const isTerminal  = isVoided || isCancelled;
 
-  // Support both grouped items[] and legacy single-item orders
+  const isPendingPayment = order.status === "pending_payment";
+  const isGcash    = order.paymentMethod === "gcash";
+  const gcashPaid  = order.gcashPaid === true;
+
   const items = order.items || [{
-    name: order.name,
-    price: order.price,
-    quantity: order.quantity,
+    name:      order.name,
+    price:     order.price,
+    quantity:  order.quantity,
     image_url: order.image_url,
-    addons: order.addons,
+    addons:    order.addons,
   }];
 
   const grandTotal = order.total
     ? parseFloat(order.total).toFixed(2)
     : items.reduce((sum, item) => sum + parseFloat(item.price || 0) * (item.quantity || 1), 0).toFixed(2);
 
-  const isGcash = order.paymentMethod === "gcash";
-  const gcashPaid = order.gcashPaid === true;
-
   return (
     <div
-      className={`aob-card ${isDragging ? "aob-card--dragging" : ""} ${isVoided ? "aob-card--voided" : ""}`}
-      draggable={!isVoided}
-      onDragStart={(e) => !isVoided && onDragStart(e, order)}
+      className={`aob-card ${isDragging ? "aob-card--dragging" : ""} ${isTerminal ? "aob-card--voided" : ""}`}
+      draggable={!isTerminal}
+      onDragStart={(e) => !isTerminal && onDragStart(e, order)}
       onDragEnd={onDragEnd}
       style={{ "--col-color": col.color, "--col-border": col.colorBorder, "--col-bg": col.colorBg }}
     >
-      {/* Drag handle */}
-      {!isVoided && <div className="aob-drag-handle" title="Drag to move">⠿</div>}
+      {!isTerminal && <div className="aob-drag-handle" title="Drag to move">⠿</div>}
 
-      {/* Void ribbon */}
-      {isVoided && (
-        <div className="aob-void-ribbon">🚫 VOIDED</div>
+      {/* Status ribbons */}
+      {isVoided    && <div className="aob-void-ribbon">🚫 VOIDED</div>}
+      {isCancelled && <div className="aob-void-ribbon" style={{ color: "#e74c3c", borderColor: "rgba(231,76,60,0.3)" }}>❌ CANCELLED BY CUSTOMER</div>}
+
+      {/* Pending payment ribbon */}
+      {isPendingPayment && isGcash && !gcashPaid && (
+        <div className="aob-pending-ribbon">⏳ AWAITING GCASH PAYMENT</div>
       )}
 
       {/* Order number + customer */}
@@ -369,6 +444,14 @@ function OrderCard({ order, col, isDragging, expanded, onToggle, onAdvance, onTo
         )}
       </div>
 
+      {/* GCash reference number (shown in pending_payment) */}
+      {isPendingPayment && isGcash && order.gcashRef && (
+        <div className="aob-gcash-ref-display">
+          <span className="aob-gcash-ref-label-small">📋 GCash Ref #</span>
+          <span className="aob-gcash-ref-value">{order.gcashRef}</span>
+        </div>
+      )}
+
       {/* Items list */}
       <div className="aob-items-list">
         {items.map((item, idx) => {
@@ -377,7 +460,6 @@ function OrderCard({ order, col, isDragging, expanded, onToggle, onAdvance, onTo
               ? item.image_url
               : "https://via.placeholder.com/40x40?text=?";
           const subtotal = (parseFloat(item.price || 0) * (item.quantity || 1)).toFixed(2);
-
           return (
             <div key={item.cartId || idx} className="aob-item-row">
               <img
@@ -416,15 +498,15 @@ function OrderCard({ order, col, isDragging, expanded, onToggle, onAdvance, onTo
         )}
       </div>
 
-      {/* GCash payment status */}
-      {isGcash && !isVoided && (
+      {/* GCash confirm toggle — visible in pending_payment AND after */}
+      {isGcash && !isTerminal && (
         <button
           className={`aob-gcash-status ${gcashPaid ? "aob-gcash-status--paid" : "aob-gcash-status--unpaid"}`}
           onClick={onToggleGcash}
-          title="Click to toggle GCash payment status"
+          title="Click to toggle GCash payment confirmation"
         >
           {gcashPaid
-            ? "✅ GCash Paid — tap to unmark"
+            ? "✅ GCash Confirmed — tap to unmark"
             : "⏳ GCash Not Yet Confirmed — tap to confirm"}
         </button>
       )}
@@ -455,12 +537,19 @@ function OrderCard({ order, col, isDragging, expanded, onToggle, onAdvance, onTo
       )}
 
       {/* Action buttons */}
-      {!isVoided && (
+      {!isTerminal && (
         <div className="aob-card-actions">
-          {nextLabel && (
-            <button className="aob-advance-btn" onClick={onAdvance}>
-              {nextLabel} →
-            </button>
+          {/* Pending GCash: lock advance until confirmed */}
+          {isPendingPayment && isGcash && !gcashPaid ? (
+            <div className="aob-locked-hint">
+              🔒 Confirm GCash payment above to advance this order
+            </div>
+          ) : (
+            nextLabel && (
+              <button className="aob-advance-btn" onClick={onAdvance}>
+                {nextLabel} →
+              </button>
+            )
           )}
           <button className="aob-void-btn" onClick={onVoid} title="Cancel / Void this order">
             🚫 Void Order

@@ -19,16 +19,6 @@ function ItemPage({ setUser }) {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
 
-  // ── Checkout options ──
-  const [fulfillment, setFulfillment] = useState("delivery"); // "delivery" | "counter"
-  const [paymentMethod, setPaymentMethod] = useState("gcash"); // "gcash" | "cash" | "cod"
-
-  // ── Delivery info ──
-  const [deliveryName, setDeliveryName] = useState("");
-  const [deliveryPhone, setDeliveryPhone] = useState("");
-  const [deliveryAddress, setDeliveryAddress] = useState("");
-  const [deliveryNote, setDeliveryNote] = useState("");
-
   useEffect(() => {
     const fetchProduct = async () => {
       try {
@@ -49,67 +39,33 @@ function ItemPage({ setUser }) {
     fetchProduct();
   }, [id]);
 
-  // Auto-set payment method when fulfillment changes
-  useEffect(() => {
-    if (fulfillment === "counter") setPaymentMethod("cash");
-    if (fulfillment === "delivery") setPaymentMethod("gcash");
-  }, [fulfillment]);
-
   const showToast = (msg, type = "success") => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 2500);
   };
 
+  const buildCartItem = () => ({
+    ...product,
+    quantity,
+    addons,
+    cartId: Date.now() + Math.random(),
+  });
+
   const handleAddToCart = () => {
     if (product.status === "Not Available") return;
-    const cartItem = {
-      ...product,
-      quantity,
-      addons,
-      cartId: Date.now() + Math.random(),
-    };
     let cart = JSON.parse(localStorage.getItem("cart")) || [];
-    cart.push(cartItem);
+    cart.push(buildCartItem());
     localStorage.setItem("cart", JSON.stringify(cart));
     showToast(`${product.name} added to cart!`);
   };
 
-  const handlePurchase = () => {
+  // "Buy Now" — adds item to cart then goes straight to /cart
+  const handleBuyNow = () => {
     if (product.status === "Not Available") return;
-
-    // Validate delivery fields
-    if (fulfillment === "delivery") {
-      if (!deliveryName.trim() || !deliveryPhone.trim() || !deliveryAddress.trim()) {
-        showToast("Please fill in all delivery fields.", "error");
-        return;
-      }
-    }
-
-    const subtotal = parseFloat(product.price) * quantity;
-
-    const order = {
-      ...product,
-      quantity,
-      addons,
-      fulfillment,                          // ← "delivery" or "counter"
-      paymentMethod,                         // ← "gcash", "cash", "cod"
-      total: subtotal.toFixed(2),
-      date: new Date().toLocaleString(),
-      orderId: Date.now(),
-      status: "ordered",
-      deliveryInfo: fulfillment === "delivery" ? {
-        name: deliveryName,
-        phone: deliveryPhone,
-        address: deliveryAddress,
-        note: deliveryNote,
-      } : null,
-    };
-
-    let orders = JSON.parse(localStorage.getItem("orders")) || [];
-    orders.push(order);
-    localStorage.setItem("orders", JSON.stringify(orders));
-    showToast("Purchase successful! Redirecting to orders...");
-    setTimeout(() => navigate("/orders"), 1800);
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+    cart.push(buildCartItem());
+    localStorage.setItem("cart", JSON.stringify(cart));
+    navigate("/cart");
   };
 
   if (loading) {
@@ -235,105 +191,6 @@ function ItemPage({ setUser }) {
               </div>
             </div>
 
-            {/* FULFILLMENT */}
-            <div className="item-field">
-              <label className="item-label">How do you want it?</label>
-              <div className="item-toggle-row">
-                <button
-                  className={`item-toggle-btn ${fulfillment === "delivery" ? "active" : ""}`}
-                  onClick={() => setFulfillment("delivery")}
-                  disabled={isUnavailable}
-                >
-                  🚗 Delivery
-                </button>
-                <button
-                  className={`item-toggle-btn ${fulfillment === "counter" ? "active" : ""}`}
-                  onClick={() => setFulfillment("counter")}
-                  disabled={isUnavailable}
-                >
-                  🏪 Counter Pick-up
-                </button>
-              </div>
-            </div>
-
-            {/* PAYMENT METHOD */}
-            <div className="item-field">
-              <label className="item-label">Payment</label>
-              <div className="item-toggle-row">
-                {fulfillment === "delivery" && (
-                  <>
-                    <button
-                      className={`item-toggle-btn ${paymentMethod === "gcash" ? "active" : ""}`}
-                      onClick={() => setPaymentMethod("gcash")}
-                      disabled={isUnavailable}
-                    >
-                      📱 GCash
-                    </button>
-                    <button
-                      className={`item-toggle-btn ${paymentMethod === "cod" ? "active" : ""}`}
-                      onClick={() => setPaymentMethod("cod")}
-                      disabled={isUnavailable}
-                    >
-                      🚗 COD
-                    </button>
-                  </>
-                )}
-                {fulfillment === "counter" && (
-                  <>
-                    <button
-                      className={`item-toggle-btn ${paymentMethod === "cash" ? "active" : ""}`}
-                      onClick={() => setPaymentMethod("cash")}
-                      disabled={isUnavailable}
-                    >
-                      💵 Cash
-                    </button>
-                    <button
-                      className={`item-toggle-btn ${paymentMethod === "gcash" ? "active" : ""}`}
-                      onClick={() => setPaymentMethod("gcash")}
-                      disabled={isUnavailable}
-                    >
-                      📱 GCash
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* DELIVERY FIELDS */}
-            {fulfillment === "delivery" && (
-              <div className="item-delivery-fields">
-                <label className="item-label">Delivery Details</label>
-                <input
-                  className="item-input"
-                  type="text"
-                  placeholder="Full Name *"
-                  value={deliveryName}
-                  onChange={(e) => setDeliveryName(e.target.value)}
-                />
-                <input
-                  className="item-input"
-                  type="text"
-                  placeholder="Phone Number *"
-                  value={deliveryPhone}
-                  onChange={(e) => setDeliveryPhone(e.target.value)}
-                />
-                <input
-                  className="item-input"
-                  type="text"
-                  placeholder="Delivery Address *"
-                  value={deliveryAddress}
-                  onChange={(e) => setDeliveryAddress(e.target.value)}
-                />
-                <input
-                  className="item-input"
-                  type="text"
-                  placeholder="Note for rider (optional)"
-                  value={deliveryNote}
-                  onChange={(e) => setDeliveryNote(e.target.value)}
-                />
-              </div>
-            )}
-
             {/* TOTAL */}
             <div className="item-total-row">
               <span className="item-total-label">Total:</span>
@@ -351,7 +208,7 @@ function ItemPage({ setUser }) {
               </button>
               <button
                 className="item-buy-btn"
-                onClick={handlePurchase}
+                onClick={handleBuyNow}
                 disabled={isUnavailable}
               >
                 Buy Now
