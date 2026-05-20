@@ -35,9 +35,42 @@ function getNextLabel(nextStatus) {
   return col ? `${col.icon} Mark as ${col.label}` : null;
 }
 
-function loadOrders() { return JSON.parse(localStorage.getItem("orders") || "[]"); }
-function saveOrders(orders) { localStorage.setItem("orders", JSON.stringify(orders)); }
+function loadOrders() {
+  const all = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith("orders_")) {
+      try {
+        const userOrders = JSON.parse(localStorage.getItem(key) || "[]");
+        all.push(...userOrders);
+      } catch {}
+    }
+  }
+  return all.sort((a, b) => b.orderId - a.orderId);
+}
 
+function saveOrders(orders) {
+  // Group orders back by userId
+  const grouped = {};
+  for (const order of orders) {
+    const key = `orders_${order.userId || "guest"}`;
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(order);
+  }
+
+  // Remove all existing order keys
+  const keysToRemove = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith("orders_")) keysToRemove.push(k);
+  }
+  keysToRemove.forEach((k) => localStorage.removeItem(k));
+
+  // Write each user's orders back
+  for (const [key, userOrders] of Object.entries(grouped)) {
+    localStorage.setItem(key, JSON.stringify(userOrders));
+  }
+}
 const TERMINAL = new Set(["completed", "voided", "cancelled"]);
 
 // ── Helper: get product names from order ──

@@ -22,8 +22,10 @@ function Navbar({ setUser, activeCategory, setActiveCategory }) {
   const refreshBadges = () => {
     const cart = JSON.parse(localStorage.getItem("cart") || "[]");
     setCartCount(cart.reduce((s, i) => s + (i.quantity || 1), 0));
-    const orders = JSON.parse(localStorage.getItem("orders") || "[]");
-    setActiveOrderCount(orders.filter((o) => o.status !== "completed" && o.status !== "voided" && o.status !== "shipped").length);
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+const userId = user?.user_id || user?.id || "guest";
+const orders = JSON.parse(localStorage.getItem(`orders_${userId}`) || "[]");
+setActiveOrderCount(orders.filter((o) => o.status !== "completed" && o.status !== "voided" && o.status !== "shipped" && o.status !== "cancelled").length);
   };
 
   const refreshProfileImage = async () => {

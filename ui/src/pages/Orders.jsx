@@ -65,18 +65,23 @@ function Orders({ setUser }) {
   }, []);
 
   const loadOrders = () => {
-    const stored = JSON.parse(localStorage.getItem("orders")) || [];
-    setOrders([...stored].reverse());
-  };
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const userId = user?.user_id || user?.id || "guest";
+  const stored = JSON.parse(localStorage.getItem(`orders_${userId}`)) || [];
+  setOrders([...stored].reverse());
+};
 
-  const handleCancelOrder = (orderId) => {
-    const stored = JSON.parse(localStorage.getItem("orders")) || [];
-    const updated = stored.map((o) =>
-      o.orderId === orderId ? { ...o, status: "cancelled" } : o
-    );
-    localStorage.setItem("orders", JSON.stringify(updated));
-    loadOrders();
-  };
+const handleCancelOrder = (orderId) => {
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const userId = user?.user_id || user?.id || "guest";
+  const key = `orders_${userId}`;
+  const stored = JSON.parse(localStorage.getItem(key)) || [];
+  const updated = stored.map((o) =>
+    o.orderId === orderId ? { ...o, status: "cancelled" } : o
+  );
+  localStorage.setItem(key, JSON.stringify(updated));
+  loadOrders();
+};
 
   // Normalise legacy "ordered" → "preparing" for display
   const normalise = (o) =>
@@ -121,16 +126,24 @@ function Orders({ setUser }) {
 
         {/* ── Status tabs ── */}
         <div className="orders-tabs">
-          {activeTabs.map((tab) => (
-            <button
-              key={tab.key}
-              className={`orders-tab ${activeFilter === tab.key ? "active" : ""}`}
-              onClick={() => setActiveFilter(tab.key)}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+  {activeTabs.map((tab) => {
+    const count = tab.key === "all"
+      ? activeOrders.length
+      : activeOrders.filter((o) => o.status === tab.key).length;
+    return (
+      <button
+        key={tab.key}
+        className={`orders-tab ${activeFilter === tab.key ? "active" : ""}`}
+        onClick={() => setActiveFilter(tab.key)}
+      >
+        {tab.label}
+        {count > 0 && (
+          <span className="orders-tab-badge">{count}</span>
+        )}
+      </button>
+    );
+  })}
+</div>
 
         {filtered.length === 0 ? (
           <div className="orders-empty">

@@ -120,9 +120,10 @@ function Cart({ setUser }) {
         .toFixed(2),
     };
 
-    let orders = JSON.parse(localStorage.getItem("orders")) || [];
-    orders = [...orders, newOrder];
-    localStorage.setItem("orders", JSON.stringify(orders));
+      const storageKey = `orders_${userId || "guest"}`;
+      let orders = JSON.parse(localStorage.getItem(storageKey)) || [];
+      orders = [...orders, newOrder];
+      localStorage.setItem(storageKey, JSON.stringify(orders));
 
     // Remove checked-out items from cart
     const remaining = cart.filter((item) => !selectedIds.has(item.cartId));
