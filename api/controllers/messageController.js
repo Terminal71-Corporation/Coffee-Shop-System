@@ -1,4 +1,6 @@
 const db = require("../config/db");
+let io;
+try { io = require("../index").io; } catch { io = null; }
 
 // SEND MESSAGE
 exports.sendMessage = async (req, res) => {
@@ -10,16 +12,23 @@ exports.sendMessage = async (req, res) => {
 
   try {
     await db.query(
-      `INSERT INTO messages (sender_id, receiver_id, message)
-       VALUES (?, ?, ?)`,
+      `INSERT INTO messages (sender_id, receiver_id, message) VALUES (?, ?, ?)`,
       [sender_id, receiver_id, message]
     );
+
+    // ── If admin (sender_id === 1) is messaging a user, notify their bell ──
+    if (Number(sender_id) === 1 && io) {
+      io.to(`user_${receiver_id}`).emit("new_admin_message", {
+        user_id: receiver_id,
+        preview: message.length > 60 ? message.slice(0, 60) + "…" : message,
+      });
+    }
+
     res.json({ success: true });
   } catch (err) {
     res.status(500).json(err);
   }
 };
-
 // GET CONVERSATION (customer <-> admin)
 exports.getMessages = async (req, res) => {
   const { user1, user2 } = req.params;

@@ -23,20 +23,15 @@ function Cart({ setUser }) {
   const loadCart = () => {
     const stored = JSON.parse(localStorage.getItem("cart")) || [];
     setCart(stored);
-    // Select all by default on load
     setSelectedIds(new Set(stored.map((item) => item.cartId)));
   };
 
-  // ── Selection helpers ──
-  const allSelected = cart.length > 0 && selectedIds.size === cart.length;
+  const allSelected  = cart.length > 0 && selectedIds.size === cart.length;
   const someSelected = selectedIds.size > 0 && selectedIds.size < cart.length;
 
   const toggleSelectAll = () => {
-    if (allSelected) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(cart.map((item) => item.cartId)));
-    }
+    if (allSelected) setSelectedIds(new Set());
+    else setSelectedIds(new Set(cart.map((item) => item.cartId)));
   };
 
   const toggleSelectItem = (cartId) => {
@@ -70,13 +65,11 @@ function Cart({ setUser }) {
   };
 
   const updateQty = (cartId, delta) => {
-    const updated = cart.map((item) => {
-      if (item.cartId === cartId) {
-        const newQty = Math.max(1, item.quantity + delta);
-        return { ...item, quantity: newQty };
-      }
-      return item;
-    });
+    const updated = cart.map((item) =>
+      item.cartId === cartId
+        ? { ...item, quantity: Math.max(1, item.quantity + delta) }
+        : item
+    );
     localStorage.setItem("cart", JSON.stringify(updated));
     setCart(updated);
   };
@@ -89,34 +82,38 @@ function Cart({ setUser }) {
     }
   };
 
-  // ── Called by PaymentModal — only checks out SELECTED items ──
+  // ── Called by PaymentModal ──
   const handlePaymentConfirm = ({ fulfillment, paymentMethod, deliveryInfo, gcashRef }) => {
-    const now = new Date().toLocaleString();
-    const sessionUser = JSON.parse(localStorage.getItem("user") || "{}");
+    const now          = new Date().toLocaleString();
+    const sessionUser  = JSON.parse(localStorage.getItem("user") || "{}");
     const customerName = sessionUser?.name || sessionUser?.email || "Guest";
-    const orderNumber = generateOrderNumber();
 
+    // ── KEY FIX: save userId so socket notifications know who to notify ──
+    const userId = sessionUser?.user_id || sessionUser?.id || null;
+
+    const orderNumber  = generateOrderNumber();
     const selectedItems = cart.filter((item) => selectedIds.has(item.cartId));
 
     const newOrder = {
-      orderId: Date.now() + Math.random(),
+      orderId:       Date.now() + Math.random(),
       orderNumber,
-      date: now,
-      status: paymentMethod === "gcash" ? "pending_payment" : "preparing",
+      date:          now,
+      status:        paymentMethod === "gcash" ? "pending_payment" : "preparing",
       fulfillment,
       paymentMethod,
-      deliveryInfo: deliveryInfo || null,
+      deliveryInfo:  deliveryInfo || null,
       customerName,
-      gcashRef: paymentMethod === "gcash" ? gcashRef : null,
-      gcashPaid: paymentMethod === "gcash" ? false : null,
+      userId,                                          // ← ADDED
+      gcashRef:      paymentMethod === "gcash" ? gcashRef : null,
+      gcashPaid:     paymentMethod === "gcash" ? false : null,
       items: selectedItems.map((item) => ({
-        cartId: item.cartId,
-        name: item.name,
-        category: item.category,
-        price: item.price,
-        quantity: item.quantity,
+        cartId:    item.cartId,
+        name:      item.name,
+        category:  item.category,
+        price:     item.price,
+        quantity:  item.quantity,
         image_url: item.image_url || "",
-        addons: item.addons || "",
+        addons:    item.addons || "",
       })),
       total: selectedItems
         .reduce((sum, item) => sum + parseFloat(item.price) * item.quantity, 0)
@@ -127,7 +124,7 @@ function Cart({ setUser }) {
     orders = [...orders, newOrder];
     localStorage.setItem("orders", JSON.stringify(orders));
 
-    // Remove only checked-out items from cart
+    // Remove checked-out items from cart
     const remaining = cart.filter((item) => !selectedIds.has(item.cartId));
     localStorage.setItem("cart", JSON.stringify(remaining));
     setCart(remaining);
@@ -138,8 +135,7 @@ function Cart({ setUser }) {
 
   const selectedItems = cart.filter((item) => selectedIds.has(item.cartId));
   const total = selectedItems.reduce(
-    (sum, item) => sum + parseFloat(item.price) * item.quantity,
-    0
+    (sum, item) => sum + parseFloat(item.price) * item.quantity, 0
   );
 
   return (
@@ -163,7 +159,6 @@ function Cart({ setUser }) {
           </div>
         ) : (
           <>
-            {/* ── Select All bar ── */}
             <div className="cart-select-bar">
               <label className="cart-checkbox-label">
                 <input
@@ -182,7 +177,6 @@ function Cart({ setUser }) {
                     : "Select all"}
                 </span>
               </label>
-
               {selectedIds.size > 0 && selectedIds.size < cart.length && (
                 <button className="cart-remove-selected-btn" onClick={removeSelected}>
                   Remove selected
@@ -247,7 +241,6 @@ function CartItem({ item, selected, onToggle, onRemove, onQty }) {
 
   return (
     <div className={`cart-item${selected ? " cart-item--selected" : ""}`}>
-      {/* Checkbox */}
       <label className="cart-checkbox-label cart-item-checkbox">
         <input
           type="checkbox"

@@ -48,6 +48,16 @@ const addProduct = async (req, res) => {
       `INSERT INTO products (name, description, category, price, status, image_url) VALUES (?, ?, ?, ?, ?, ?)`,
       [name, description || "", category, price, status || "Available", image_url || null]
     );
+
+    // ── NOTIFY ALL USERS ──
+    if (io) {
+      io.emit("new_product", {
+        name,
+        price,
+        image_url: image_url || null,
+      });
+    }
+
     res.status(201).json({ message: "Product added successfully" });
   } catch (err) {
     console.log("addProduct error:", err);
