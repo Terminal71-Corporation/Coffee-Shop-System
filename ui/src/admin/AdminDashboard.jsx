@@ -11,12 +11,22 @@ const FIXED_CATEGORIES = [
   "Equipment",
 ];
 
+const STATUS_FLOW = ["ordered", "delivering", "shipped"];
+
+const STATUS_LABELS = {
+  ordered:    { label: "Order Placed", color: "#d4a055", bg: "rgba(212,160,85,0.15)" },
+  delivering: { label: "Delivering",   color: "#3498db", bg: "rgba(52,152,219,0.15)" },
+  shipped:    { label: "Shipped",      color: "#3cb371", bg: "rgba(46,139,87,0.15)" },
+};
+
 function AdminDashboard() {
   // ======================
   // STATES
   // ======================
   const [products, setProducts] = useState([]);
   const [users, setUsers] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [orderFilter, setOrderFilter] = useState("all");
 
   const [form, setForm] = useState({
     name: "",
@@ -30,9 +40,10 @@ function AdminDashboard() {
   const [imagePreview, setImagePreview] = useState(null);
 
   const usersRef = useRef(null);
+  const ordersRef = useRef(null);
 
   // ======================
-  // FETCH PRODUCTS
+  // FETCH
   // ======================
   const fetchProducts = async () => {
     try {
@@ -44,9 +55,6 @@ function AdminDashboard() {
     }
   };
 
-  // ======================
-  // FETCH USERS
-  // ======================
   const fetchUsers = async () => {
     try {
       const res = await fetch("http://localhost:5000/users");
@@ -57,24 +65,48 @@ function AdminDashboard() {
     }
   };
 
+  const loadOrders = () => {
+    const stored = JSON.parse(localStorage.getItem("orders")) || [];
+    // newest first
+    setOrders([...stored].reverse());
+  };
+
   useEffect(() => {
     fetchProducts();
     fetchUsers();
+    loadOrders();
   }, []);
 
   // ======================
-  // SCROLL TO USERS
+  // ORDER STATUS UPDATE
   // ======================
-  const scrollToUsers = () => {
-    usersRef.current?.scrollIntoView({ behavior: "smooth" });
+  const updateOrderStatus = (orderId, newStatus) => {
+    const stored = JSON.parse(localStorage.getItem("orders")) || [];
+    const updated = stored.map((o) =>
+      String(o.orderId) === String(orderId) ? { ...o, status: newStatus } : o
+    );
+    localStorage.setItem("orders", JSON.stringify(updated));
+    loadOrders();
   };
+
+  const filteredOrders =
+    orderFilter === "all"
+      ? orders
+      : orders.filter((o) => o.status === orderFilter);
+
+  // ======================
+  // SCROLL
+  // ======================
+  const scrollToUsers = () =>
+    usersRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollToOrders = () =>
+    ordersRef.current?.scrollIntoView({ behavior: "smooth" });
 
   // ======================
   // DELETE USER
   // ======================
   const deleteUser = async (id, name) => {
     if (!window.confirm(`Delete account of "${name}"? This cannot be undone.`)) return;
-
     try {
       await fetch(`http://localhost:5000/users/${id}`, { method: "DELETE" });
       fetchUsers();
@@ -119,7 +151,6 @@ function AdminDashboard() {
           body: JSON.stringify(payload),
         });
       }
-
       setForm({ name: "", category: "", price: "", stock: "", image_url: "" });
       setImagePreview(null);
       fetchProducts();
@@ -169,9 +200,14 @@ function AdminDashboard() {
       {/* TITLE ROW */}
       <div className="admin-title-row">
         <h1 className="admin-title">Admin Product Management</h1>
-        <button className="goto-users-btn" onClick={scrollToUsers}>
-          👥 Go to Users
-        </button>
+        <div style={{ display: "flex", gap: "10px" }}>
+          <button className="goto-users-btn" onClick={scrollToOrders}>
+            📦 Go to Orders
+          </button>
+          <button className="goto-users-btn" onClick={scrollToUsers}>
+            👥 Go to Users
+          </button>
+        </div>
       </div>
 
       {/* ====================== */}
@@ -311,6 +347,123 @@ function AdminDashboard() {
           ) : (
             <tr>
               <td colSpan="7" className="no-products">No products found</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+
+      {/* ====================== */}
+      {/* ORDERS TABLE            */}
+      {/* ====================== */}
+      <div
+        ref={ordersRef}
+        style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}
+      >
+        <h2 className="admin-subtitle">All Orders</h2>
+        <button
+          className="goto-users-btn"
+          onClick={loadOrders}
+          style={{ fontSize: "0.82rem", padding: "6px 14px" }}
+        >
+          ↻ Refresh
+        </button>
+      </div>
+
+      {/* Order Filter Tabs */}
+      <div className="admin-order-tabs" style={{ marginBottom: "18px" }}>
+        {["all", "ordered", "delivering", "shipped"].map((tab) => (
+          <button
+            key={tab}
+            className={`admin-order-tab ${orderFilter === tab ? "active" : ""}`}
+            onClick={() => setOrderFilter(tab)}
+          >
+            {tab === "all" ? "All" :
+             tab === "ordered" ? "Order Placed" :
+             tab === "delivering" ? "Delivering" : "Shipped"}
+            <span className="order-tab-count">
+              {tab === "all"
+                ? orders.length
+                : orders.filter((o) => o.status === tab).length}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      <table className="admin-table" style={{ marginBottom: "48px" }}>
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Image</th>
+            <th>Product</th>
+            <th>Add-ons</th>
+            <th>Qty</th>
+            <th>Total</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filteredOrders.length > 0 ? (
+            filteredOrders.map((order, i) => {
+              const status = STATUS_LABELS[order.status] || STATUS_LABELS.ordered;
+              const subtotal = (parseFloat(order.price) * (order.quantity || 1)).toFixed(2);
+              const currentIdx = STATUS_FLOW.indexOf(order.status);
+
+              return (
+                <tr key={order.orderId || i}>
+                  <td style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.4)" }}>
+                    #{String(order.orderId).slice(-6)}
+                  </td>
+                  <td>
+                    {order.image_url ? (
+                      <img src={order.image_url} className="table-image" alt={order.name} />
+                    ) : (
+                      <div className="no-image-placeholder">No Image</div>
+                    )}
+                  </td>
+                  <td>{order.name}</td>
+                  <td style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.85rem" }}>
+                    {order.addons || "—"}
+                  </td>
+                  <td>×{order.quantity || 1}</td>
+                  <td style={{ color: "#d4a055", fontWeight: 700 }}>₱{subtotal}</td>
+                  <td style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.45)" }}>
+                    {order.date}
+                  </td>
+                  <td>
+                    <span
+                      className="category-badge"
+                      style={{ background: status.bg, color: status.color, borderColor: status.color + "55" }}
+                    >
+                      {status.label}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="order-action-btns">
+                      {STATUS_FLOW.map((s) => (
+                        <button
+                          key={s}
+                          className={`order-status-btn ${order.status === s ? "active-status" : ""}`}
+                          onClick={() => updateOrderStatus(order.orderId, s)}
+                          disabled={order.status === s}
+                          style={
+                            order.status === s
+                              ? { background: STATUS_LABELS[s].bg, color: STATUS_LABELS[s].color, opacity: 1 }
+                              : {}
+                          }
+                        >
+                          {s === "ordered" ? "Ordered" : s === "delivering" ? "Delivering" : "Shipped"}
+                        </button>
+                      ))}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })
+          ) : (
+            <tr>
+              <td colSpan="9" className="no-products">No orders found</td>
             </tr>
           )}
         </tbody>

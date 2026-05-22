@@ -291,3 +291,91 @@
   background: #1a1208;
   color: white;
 }
+
+/* ============================================================
+   APPEND THESE TO YOUR EXISTING AdminStyle.css
+   ============================================================ */
+
+/* ORDER FILTER TABS */
+.admin-order-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-order-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.55);
+  padding: 8px 18px;
+  border-radius: 30px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: 0.2s;
+}
+
+.admin-order-tab:hover {
+  color: white;
+  border-color: rgba(212, 160, 85, 0.4);
+}
+
+.admin-order-tab.active {
+  background: rgba(212, 160, 85, 0.12);
+  border-color: rgba(212, 160, 85, 0.45);
+  color: #d4a055;
+}
+
+.order-tab-count {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 12px;
+  min-width: 20px;
+  text-align: center;
+}
+
+.admin-order-tab.active .order-tab-count {
+  background: rgba(212, 160, 85, 0.2);
+  color: #d4a055;
+}
+
+/* ORDER ACTION BUTTONS */
+.order-action-btns {
+  display: flex;
+  gap: 5px;
+  flex-direction: column;
+}
+
+.order-status-btn {
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+  white-space: nowrap;
+}
+
+.order-status-btn:hover:not(:disabled) {
+  background: rgba(212, 160, 85, 0.15);
+  color: #d4a055;
+  border-color: rgba(212, 160, 85, 0.4);
+}
+
+.order-status-btn:disabled {
+  cursor: default;
+  font-weight: 700;
+}
+
+.order-status-btn.active-status {
+  font-weight: 700;
+}

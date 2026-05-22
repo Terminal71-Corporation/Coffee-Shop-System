@@ -1,208 +1,158 @@
-/* ── PROFILE PAGE ── */
-.profile-page {
-  min-height: 100vh;
-  background: #1a1208;
-  padding: 50px 20px 80px;
-  display: flex;
-  justify-content: center;
-  font-family: "Georgia", serif;
+.shop-page {
+  position: relative;
+  z-index: 2;
+  padding: 30px 0 60px;
 }
 
-/* ── CARD ── */
-.profile-card {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(212, 160, 85, 0.2);
-  border-radius: 24px;
-  padding: 48px 40px;
-  width: 100%;
-  max-width: 720px;
-  backdrop-filter: blur(12px);
-  animation: fadeUp 0.5s ease;
-}
-
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(24px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-/* ── PROFILE IMAGE SECTION ── */
-.profile-image-section {
+.products-section {
+  padding: 0 40px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  margin-bottom: 24px;
+  gap: 48px;
 }
 
-.profile-image {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 3px solid #d4a055;
-  box-shadow: 0 0 30px rgba(212, 160, 85, 0.3);
-  transition: transform 0.3s;
+.category-section {
+  scroll-margin-top: 140px;
 }
 
-.profile-image:hover {
-  transform: scale(1.04);
+.section-title {
+  margin-bottom: 20px;
 }
 
-.profile-placeholder {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #b8863c, #d4a055);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2.8rem;
-  font-weight: bold;
-  color: white;
-  border: 3px solid rgba(212, 160, 85, 0.4);
-  box-shadow: 0 0 30px rgba(212, 160, 85, 0.25);
-}
-
-.upload-photo-btn {
-  background: rgba(212, 160, 85, 0.12);
-  border: 1px solid rgba(212, 160, 85, 0.35);
-  color: #d4a055;
-  padding: 7px 18px;
-  border-radius: 20px;
-  font-size: 0.82rem;
-  cursor: pointer;
-  font-family: Georgia, serif;
-  transition: background 0.2s, transform 0.2s;
-}
-
-.upload-photo-btn:hover {
-  background: rgba(212, 160, 85, 0.22);
-  transform: translateY(-1px);
-}
-
-/* ── NAME & EMAIL ── */
-.profile-card > h2 {
-  text-align: center;
-  color: white;
+.section-title h2 {
+  color: var(--off-white);
   font-size: 1.7rem;
-  margin-bottom: 6px;
-}
-
-.profile-card > p {
-  text-align: center;
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 0.95rem;
-  margin-bottom: 12px;
-}
-
-.role-badge {
-  display: block;
-  text-align: center;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--brass);
   width: fit-content;
-  margin: 0 auto 32px;
-  background: rgba(184, 134, 60, 0.2);
-  color: #d4a055;
-  padding: 4px 16px;
-  border-radius: 20px;
-  font-size: 0.78rem;
-  font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  border: 1px solid rgba(212, 160, 85, 0.3);
 }
 
-/* ── DIVIDER ── */
-.profile-card > h2 + p + .role-badge {
-  margin-bottom: 32px;
-}
-
-/* ── INFO GRID ── */
-.profile-info {
+/* GRID */
+.products-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
 }
 
-/* last box (Member Since) spans full width */
-.profile-info .info-box:last-child {
-  grid-column: 1 / -1;
-}
-
-/* ── INFO BOX ── */
-.info-box {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(212, 160, 85, 0.15);
-  border-radius: 16px;
-  padding: 20px;
+/* CARD — entire card is clickable */
+.product-card {
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(212,160,85,.2);
+  border-radius: 18px;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  min-height: 100%;
+  transition: .3s;
+  backdrop-filter: blur(10px);
+  cursor: pointer;
 }
 
-.info-box label {
+.product-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 15px 35px rgba(0,0,0,.4);
+  border-color: rgba(212,160,85,.5);
+}
+
+/* IMAGE */
+.product-card img {
+  width: 100%;
+  height: 230px;
+  object-fit: cover;
+}
+
+/* INFO */
+.product-info {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+/* CLICKABLE NAME */
+.product-name-link {
+  color: white;
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+  transition: color 0.2s;
+}
+
+.product-card:hover .product-name-link {
   color: #d4a055;
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+}
+
+.product-price {
+  color: #d4a055;
+  font-size: 1.1rem;
   font-weight: bold;
+  margin-bottom: 18px;
 }
 
-.info-box input[type="date"],
-.info-box textarea {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(212, 160, 85, 0.25);
-  border-radius: 10px;
-  color: white;
-  padding: 10px 14px;
-  font-size: 0.9rem;
-  font-family: Georgia, serif;
-  outline: none;
-  resize: none;
-  transition: border-color 0.2s;
-  color-scheme: dark;
+/* BUTTON AREA */
+.product-buttons {
+  margin-top: auto;
 }
 
-.info-box input[type="date"]:focus,
-.info-box textarea:focus {
-  border-color: #d4a055;
-  box-shadow: 0 0 0 3px rgba(212, 160, 85, 0.1);
-}
-
-.info-box button {
-  background: linear-gradient(135deg, #b8863c, #d4a055);
+/* SINGLE VIEW BUTTON */
+.buy-btn {
+  width: 100%;
   border: none;
-  color: white;
-  padding: 10px;
+  padding: 12px;
   border-radius: 10px;
   cursor: pointer;
+  color: white;
   font-weight: bold;
-  font-size: 0.88rem;
-  font-family: Georgia, serif;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: .2s;
+  background: linear-gradient(135deg,#b8863c,#d4a055);
 }
 
-.info-box button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+.buy-btn:hover {
+  transform: scale(1.03);
+  box-shadow: 0 4px 16px rgba(212,160,85,0.3);
 }
 
-.info-box p {
-  color: rgba(255, 255, 255, 0.55);
-  font-size: 0.85rem;
-  margin: 0;
+/* NO PRODUCTS */
+.no-products-msg {
+  color: rgba(255,255,255,.5);
+  font-style: italic;
 }
 
-/* ── MOBILE ── */
-@media (max-width: 600px) {
-  .profile-card {
-    padding: 32px 20px;
+/* TABLET */
+@media (max-width: 1100px) {
+  .products-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+  .products-section {
+    padding: 0 15px;
   }
 
-  .profile-info {
-    grid-template-columns: 1fr;
+  .products-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
   }
 
-  .profile-info .info-box:last-child {
-    grid-column: unset;
+  .product-card img {
+    height: 160px;
+  }
+
+  .product-info {
+    padding: 12px;
+  }
+
+  .product-name-link {
+    font-size: .95rem;
+  }
+
+  .product-price {
+    font-size: .95rem;
+  }
+
+  .buy-btn {
+    padding: 10px;
+    font-size: .85rem;
   }
 }
