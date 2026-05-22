@@ -1,14 +1,15 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 
-import Navbar from "./components/Navbar";
 import Login from "./login";
 import Register from "./register";
 import Home from "./pages/Home";
 import AdminDashboard from "./admin/AdminDashboard";
 import Products from "./pages/Products";
 import Profile from "./pages/Profile";
-
+import ItemPage from "./pages/ItemPage";
+import Cart from "./pages/Cart";
+import Orders from "./pages/Orders";
 import music from "./assets/music.mp3";
 
 function App() {
@@ -36,15 +37,13 @@ function App() {
     };
 
     document.addEventListener("click", handleUserInteraction);
-
-    return () => {
-      document.removeEventListener("click", handleUserInteraction);
-    };
+    return () => document.removeEventListener("click", handleUserInteraction);
   }, []);
+
+  const isAdmin = user?.role === "admin";
 
   return (
     <>
-      {/* GLOBAL MUSIC */}
       <audio ref={audioRef} loop>
         <source src={music} type="audio/mpeg" />
       </audio>
@@ -58,7 +57,13 @@ function App() {
           {/* LOGIN */}
           <Route
             path="/login"
-            element={user ? <Navigate to="/home" /> : <Login setUser={setUser} />}
+            element={
+              user
+                ? isAdmin
+                  ? <Navigate to="/admin" />
+                  : <Navigate to="/home" />
+                : <Login setUser={setUser} />
+            }
           />
 
           {/* REGISTER */}
@@ -67,16 +72,28 @@ function App() {
             element={user ? <Navigate to="/home" /> : <Register setUser={setUser} />}
           />
 
-          {/* HOME */}
+          {/* HOME — regular users only */}
           <Route
             path="/home"
-            element={user ? <Home setUser={setUser} /> : <Navigate to="/login" />}
+            element={
+              !user
+                ? <Navigate to="/login" />
+                : isAdmin
+                  ? <Navigate to="/admin" />
+                  : <Home setUser={setUser} />
+            }
           />
 
           {/* PRODUCTS */}
           <Route
             path="/products"
-            element={user ? <Products setUser={setUser} /> : <Navigate to="/login" />}
+            element={user && !isAdmin ? <Products setUser={setUser} /> : <Navigate to="/login" />}
+          />
+
+          {/* ITEM DETAIL */}
+          <Route
+            path="/item/:id"
+            element={user && !isAdmin ? <ItemPage setUser={setUser} /> : <Navigate to="/login" />}
           />
 
           {/* PROFILE */}
@@ -88,56 +105,26 @@ function App() {
           {/* CART */}
           <Route
             path="/cart"
-            element={
-              user ? (
-                <>
-                  <Navbar setUser={setUser} />
-                  <div style={{ padding: "50px", color: "white", fontSize: "2rem" }}>
-                    🛒 Cart Page
-                  </div>
-                </>
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
+            element={user && !isAdmin ? <Cart setUser={setUser} /> : <Navigate to="/login" />}
           />
 
           {/* ORDERS */}
           <Route
             path="/orders"
-            element={
-              user ? (
-                <>
-                  <Navbar setUser={setUser} />
-                  <div style={{ padding: "50px", color: "white", fontSize: "2rem" }}>
-                    📦 Orders Page
-                  </div>
-                </>
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
+            element={user && !isAdmin ? <Orders setUser={setUser} /> : <Navigate to="/login" />}
           />
 
-          {/* MESSAGES */}
+          {/* ADMIN — admin only, redirects regular users away */}
           <Route
-            path="/messages"
+            path="/admin"
             element={
-              user ? (
-                <>
-                  <Navbar setUser={setUser} />
-                  <div style={{ padding: "50px", color: "white", fontSize: "2rem" }}>
-                    💬 Messages Page
-                  </div>
-                </>
-              ) : (
-                <Navigate to="/login" />
-              )
+              !user
+                ? <Navigate to="/login" />
+                : isAdmin
+                  ? <AdminDashboard />
+                  : <Navigate to="/home" />
             }
           />
-
-          {/* ADMIN */}
-          <Route path="/admin" element={<AdminDashboard />} />
 
           {/* FALLBACK */}
           <Route path="*" element={<Navigate to="/login" />} />

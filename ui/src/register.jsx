@@ -7,7 +7,7 @@ function Register() {
     username: "",
     email: "",
     password: "",
-    confirm_password: ""
+    confirm_password: "",
   });
 
   const [message, setMessage] = useState("");
@@ -16,14 +16,13 @@ function Register() {
   const handleChange = (e) => {
     setForm((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // 🔒 simple frontend validation
     if (form.password !== form.confirm_password) {
       setMessage("Passwords do not match");
       return;
@@ -32,32 +31,46 @@ function Register() {
     try {
       const res = await fetch("http://localhost:5000/auth/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form)
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: form.username,
+          email: form.email,
+          password: form.password,
+        }),
       });
 
-      const data = await res.json();
+      const text = await res.text();
+
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (err) {
+        console.log("Server response not JSON:", text);
+        setMessage("Server error");
+        return;
+      }
+
       setMessage(data.message);
 
       if (data.message === "Registration successful") {
         setTimeout(() => navigate("/login"), 1000);
       }
     } catch (error) {
-      setMessage("Server error. Please try again.");
-      console.error(error);
+      console.log(error);
+      setMessage("Cannot connect to server");
     }
   };
 
-return (
-  <div className="page">
-    <div className="shader"></div>
+  return (
+    <div className="page">
+      <div className="shader"></div>
 
-    <div className="logointromod">
+      <div className="logointromod">
+        <img className="logointro" src={logo1} alt="logo" />
 
-      <img className="logointro" src={logo1} alt="logo" />
-
-      <div className="register-box">
-
+        <div className="register-box">
           <h2 className="register-title">Register</h2>
 
           {message && <div className="msg">{message}</div>}
@@ -67,6 +80,7 @@ return (
               name="username"
               type="text"
               placeholder="Username"
+              value={form.username}
               onChange={handleChange}
               required
             />
@@ -75,6 +89,7 @@ return (
               name="email"
               type="email"
               placeholder="Email"
+              value={form.email}
               onChange={handleChange}
               required
             />
@@ -83,6 +98,7 @@ return (
               name="password"
               type="password"
               placeholder="Password"
+              value={form.password}
               onChange={handleChange}
               required
             />
@@ -91,6 +107,7 @@ return (
               name="confirm_password"
               type="password"
               placeholder="Confirm Password"
+              value={form.confirm_password}
               onChange={handleChange}
               required
             />
@@ -98,12 +115,11 @@ return (
             <input type="submit" value="Register" />
           </form>
 
-        <Link to="/login">Already have an account?</Link>
-
+          <Link to="/login">Already have an account?</Link>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
 }
 
 export default Register;

@@ -1,37 +1,43 @@
 const db = require("../config/db");
 
 // GET ALL CATEGORIES
-const getCategories = (req, res) => {
-  const sql = "SELECT * FROM categories ORDER BY category_id DESC";
-
-  db.query(sql, (err, result) => {
-    if (err) return res.status(500).json({ message: "Failed to fetch categories" });
+const getCategories = async (req, res) => {
+  try {
+    const [result] = await db.query(
+      "SELECT * FROM categories ORDER BY category_id DESC"
+    );
     res.json(result);
-  });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch categories" });
+  }
 };
 
 // ADD CATEGORY
-const addCategory = (req, res) => {
+const addCategory = async (req, res) => {
   const { name } = req.body;
-
-  const sql = "INSERT INTO categories (name) VALUES (?)";
-
-  db.query(sql, [name], (err) => {
-    if (err) return res.status(500).json({ message: "Failed to add category" });
+  try {
+    await db.query(
+      "INSERT INTO categories (name) VALUES (?)",
+      [name]
+    );
     res.status(201).json({ message: "Category added" });
-  });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to add category" });
+  }
 };
 
 // DELETE CATEGORY
-const deleteCategory = (req, res) => {
+const deleteCategory = async (req, res) => {
   const { id } = req.params;
-
-  const sql = "DELETE FROM categories WHERE category_id = ?";
-
-  db.query(sql, [id], (err) => {
-    if (err) return res.status(500).json({ message: "Failed to delete category" });
+  try {
+    await db.query(
+      "DELETE FROM categories WHERE category_id = ?",
+      [id]
+    );
     res.json({ message: "Category deleted" });
-  });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to delete category" });
+  }
 };
 
 module.exports = {

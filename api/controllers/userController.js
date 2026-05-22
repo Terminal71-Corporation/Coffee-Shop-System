@@ -3,84 +3,102 @@ const db = require("../config/db");
 // ======================
 // GET ALL USERS
 // ======================
-exports.getAllUsers = (req, res) => {
-  const sql = `
-    SELECT user_id, name, email, role, age, address, created_at
-    FROM users
-    ORDER BY created_at DESC
-  `;
-  db.query(sql, (err, result) => {
-    if (err) {
-      console.log("getAllUsers error:", err);
-      return res.status(500).json(err);
-    }
+exports.getAllUsers = async (req, res) => {
+  try {
+    const [result] = await db.query(`
+      SELECT user_id, name, email, role, age, address, birthdate, profile_picture, created_at
+      FROM users
+      ORDER BY created_at DESC
+    `);
     res.json(result);
-  });
+  } catch (err) {
+    console.log("getAllUsers error:", err);
+    res.status(500).json(err);
+  }
 };
 
 // ======================
 // GET USER BY ID
 // ======================
-exports.getUser = (req, res) => {
-  const sql = `SELECT * FROM users WHERE user_id = ?`;
-  db.query(sql, [req.params.id], (err, result) => {
-    if (err) {
-      console.log("getUser error:", err);
-      return res.status(500).json(err);
-    }
+exports.getUser = async (req, res) => {
+  try {
+    const [result] = await db.query(
+      `SELECT * FROM users WHERE user_id = ?`,
+      [req.params.id]
+    );
     res.json(result[0]);
-  });
+  } catch (err) {
+    console.log("getUser error:", err);
+    res.status(500).json(err);
+  }
 };
 
 // ======================
 // DELETE USER
 // ======================
-exports.deleteUser = (req, res) => {
-  const sql = `DELETE FROM users WHERE user_id = ?`;
-  db.query(sql, [req.params.id], (err) => {
-    if (err) {
-      console.log("deleteUser error:", err);
-      return res.status(500).json(err);
-    }
+exports.deleteUser = async (req, res) => {
+  try {
+    await db.query(
+      `DELETE FROM users WHERE user_id = ?`,
+      [req.params.id]
+    );
     res.json({ message: "User deleted" });
-  });
+  } catch (err) {
+    console.log("deleteUser error:", err);
+    res.status(500).json(err);
+  }
 };
 
 // ======================
 // UPDATE BIRTHDATE
 // ======================
-exports.updateBirthdate = (req, res) => {
+exports.updateBirthdate = async (req, res) => {
   const { birthdate } = req.body;
   const today = new Date();
   const birth = new Date(birthdate);
   const age = today.getFullYear() - birth.getFullYear();
-  const sql = `UPDATE users SET birthdate = ?, age = ? WHERE user_id = ?`;
-  db.query(sql, [birthdate, age, req.params.id], (err) => {
-    if (err) return res.status(500).json(err);
+
+  try {
+    await db.query(
+      `UPDATE users SET birthdate = ?, age = ? WHERE user_id = ?`,
+      [birthdate, age, req.params.id]
+    );
     res.json({ message: "Birthdate updated" });
-  });
+  } catch (err) {
+    res.status(500).json(err);
+  }
 };
 
 // ======================
 // UPDATE ADDRESS
 // ======================
-exports.updateAddress = (req, res) => {
+exports.updateAddress = async (req, res) => {
   const { address } = req.body;
-  const sql = `UPDATE users SET address = ? WHERE user_id = ?`;
-  db.query(sql, [address, req.params.id], (err) => {
-    if (err) return res.status(500).json(err);
+
+  try {
+    await db.query(
+      `UPDATE users SET address = ? WHERE user_id = ?`,
+      [address, req.params.id]
+    );
     res.json({ message: "Address updated" });
-  });
+  } catch (err) {
+    res.status(500).json(err);
+  }
 };
 
 // ======================
 // UPDATE PROFILE PICTURE
 // ======================
-exports.updateProfilePicture = (req, res) => {
+exports.updateProfilePicture = async (req, res) => {
   const { profile_picture } = req.body;
-  const sql = `UPDATE users SET profile_picture = ? WHERE user_id = ?`;
-  db.query(sql, [profile_picture, req.params.id], (err) => {
-    if (err) return res.status(500).json(err);
+
+  try {
+    await db.query(
+      `UPDATE users SET profile_picture = ? WHERE user_id = ?`,
+      [profile_picture, req.params.id]
+    );
     res.json({ message: "Profile picture updated" });
-  });
+  } catch (err) {
+    res.status(500).json(err);
+  }
 };

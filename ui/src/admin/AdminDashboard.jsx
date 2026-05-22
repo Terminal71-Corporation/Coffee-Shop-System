@@ -1,109 +1,74 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import AdminNavbar from "./AdminNavbar";
-import "./AdminStyle.css";
+import AdminMessenger from "./AdminMessenger";
+import AdminOrdersBoard from "./AdminOrdersBoard";
+import socket from "../services/messageService";
 
-const FIXED_CATEGORIES = [
-  "Espresso",
-  "Latte",
-  "Tea",
-  "Pastries",
-  "Beans",
-  "Equipment",
-];
+import "./AdminStyle.css";
+import "./AdminOrdersBoard.css";
+
+const FIXED_CATEGORIES = ["Espresso", "Latte", "Tea", "Pastries", "Beans", "Equipment"];
+const PRODUCT_STATUSES = ["Available", "Not Available", "Best Seller"];
+const STATUS_STYLE = {
+  "Available":     { color: "#3cb371", bg: "rgba(46,139,87,0.15)" },
+  "Not Available": { color: "#e74c3c", bg: "rgba(192,57,43,0.15)" },
+  "Best Seller":   { color: "#d4a055", bg: "rgba(212,160,85,0.15)" },
+};
 
 function AdminDashboard() {
-  // ======================
-  // STATES
-  // ======================
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user") || "null");
+    if (!user) navigate("/login");
+    else if (user.role !== "admin") navigate("/home");
+  }, []);
+
+  const [activeView, setActiveView] = useState("products");
   const [products, setProducts] = useState([]);
   const [users, setUsers] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
 
   const [form, setForm] = useState({
-    name: "",
-    category: "",
-    price: "",
-    stock: "",
-    image_url: "",
+    name: "", description: "", category: "", price: "", status: "Available", image_url: ""
   });
-
   const [editId, setEditId] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
 
-  const usersRef = useRef(null);
-
-  // ======================
-  // FETCH PRODUCTS
-  // ======================
   const fetchProducts = async () => {
     try {
       const res = await fetch("http://localhost:5000/products");
       const data = await res.json();
-      setProducts(data.reverse());
-    } catch (err) {
-      console.log("fetchProducts error:", err);
-    }
+      setProducts([...data].reverse());
+    } catch (err) { console.log(err); }
   };
 
-  // ======================
-  // FETCH USERS
-  // ======================
   const fetchUsers = async () => {
     try {
       const res = await fetch("http://localhost:5000/users");
       const data = await res.json();
       setUsers(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.log("fetchUsers error:", err);
-    }
+    } catch (err) { console.log(err); }
   };
 
-  useEffect(() => {
-    fetchProducts();
-    fetchUsers();
-  }, []);
+  useEffect(() => { fetchProducts(); fetchUsers(); }, []);
 
-  // ======================
-  // SCROLL TO USERS
-  // ======================
-  const scrollToUsers = () => {
-    usersRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  // ======================
-  // DELETE USER
-  // ======================
-  const deleteUser = async (id, name) => {
-    if (!window.confirm(`Delete account of "${name}"? This cannot be undone.`)) return;
-
-    try {
-      await fetch(`http://localhost:5000/users/${id}`, { method: "DELETE" });
-      fetchUsers();
-    } catch (err) {
-      console.log("deleteUser error:", err);
-    }
-  };
-
-  // ======================
-  // IMAGE UPLOAD
-  // ======================
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onloadend = () => {
       setImagePreview(reader.result);
-      setForm({ ...form, image_url: reader.result });
+      setForm((prev) => ({ ...prev, image_url: reader.result }));
     };
     reader.readAsDataURL(file);
   };
 
-  // ======================
-  // SUBMIT
-  // ======================
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const payload = { ...form, category: form.category.trim() };
-
+    const payload = { ...form, price: Number(form.price) };
     try {
       if (editId) {
         await fetch(`http://localhost:5000/products/${editId}`, {
@@ -111,278 +76,242 @@ function AdminDashboard() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
-        setEditId(null);
       } else {
         await fetch("http://localhost:5000/products", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
+        socket.emit("admin_new_product", { name: payload.name, price: payload.price });
       }
-
-      setForm({ name: "", category: "", price: "", stock: "", image_url: "" });
+      setEditId(null);
+      setForm({ name: "", description: "", category: "", price: "", status: "Available", image_url: "" });
       setImagePreview(null);
+      setIsModalOpen(false);
       fetchProducts();
-    } catch (err) {
-      console.log(err);
-    }
+    } catch (err) { console.log(err); }
   };
 
-  // ======================
-  // DELETE PRODUCT
-  // ======================
   const deleteProduct = async (id) => {
     if (!window.confirm("Delete this product?")) return;
     await fetch(`http://localhost:5000/products/${id}`, { method: "DELETE" });
     fetchProducts();
   };
 
-  // ======================
-  // EDIT PRODUCT
-  // ======================
   const editProduct = (product) => {
     setForm({
       name: product.name,
-      category: FIXED_CATEGORIES.includes(product.category) ? product.category : "",
+      description: product.description || "",
+      category: product.category,
       price: product.price,
-      stock: product.stock || "",
+      status: product.status || "Available",
       image_url: product.image_url || "",
     });
     setImagePreview(product.image_url || null);
     setEditId(product.product_id);
+    setIsModalOpen(true);
   };
 
   const cancelEdit = () => {
     setEditId(null);
-    setForm({ name: "", category: "", price: "", stock: "", image_url: "" });
+    setForm({ name: "", description: "", category: "", price: "", status: "Available", image_url: "" });
     setImagePreview(null);
+    setIsModalOpen(false);
   };
 
-  // ======================
-  // RENDER
-  // ======================
+  const deleteUser = async (id) => {
+    if (!window.confirm("Delete this user?")) return;
+    await fetch(`http://localhost:5000/users/${id}`, { method: "DELETE" });
+    setSelectedUser(null);
+    fetchUsers();
+  };
+
+  const fmt = (val) => val ? new Date(val).toLocaleDateString() : "Not set";
+  const fmtDT = (val) => val ? new Date(val).toLocaleString() : "—";
+
   return (
-    <div className="admin-container">
+    <div className="admin-layout">
+      <AdminNavbar activeView={activeView} setActiveView={setActiveView} />
 
-      <AdminNavbar />
+      <div className="admin-content">
 
-      {/* TITLE ROW */}
-      <div className="admin-title-row">
-        <h1 className="admin-title">Admin Product Management</h1>
-        <button className="goto-users-btn" onClick={scrollToUsers}>
-          👥 Go to Users
-        </button>
-      </div>
+        {/* ===== PRODUCTS ===== */}
+        {activeView === "products" && (
+          <>
+            <div className="title-bar">
+              <h1 className="admin-title">Products</h1>
+              <button className="add-btn admin-submit-btn" onClick={() => {
+                setEditId(null);
+                setForm({ name: "", description: "", category: "", price: "", status: "Available", image_url: "" });
+                setImagePreview(null);
+                setIsModalOpen(true);
+              }}>+ Add Product</button>
+            </div>
+            <table className="admin-table">
+              <thead>
+                <tr><th>Image</th><th>Name</th><th>Category</th><th>Price</th><th>Status</th><th>Actions</th></tr>
+              </thead>
+              <tbody>
+                {products.map((p) => {
+                  const s = STATUS_STYLE[p.status] || STATUS_STYLE["Available"];
+                  return (
+                    <tr key={p.product_id}>
+                      <td>
+                        {p.image_url
+                          ? <img src={p.image_url} className="table-image" alt={p.name} />
+                          : <div className="no-image-placeholder">No Image</div>}
+                      </td>
+                      <td>{p.name}</td>
+                      <td><span className="category-badge">{p.category}</span></td>
+                      <td>₱{p.price}</td>
+                      <td>
+                        <span className="category-badge" style={{ background: s.bg, color: s.color, borderColor: s.color + "55" }}>
+                          {p.status || "Available"}
+                        </span>
+                      </td>
+                      <td>
+                        <button className="edit-btn" onClick={() => editProduct(p)}>Edit</button>
+                        <button className="delete-btn" onClick={() => deleteProduct(p.product_id)}>Delete</button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </>
+        )}
 
-      {/* ====================== */}
-      {/* PRODUCT FORM            */}
-      {/* ====================== */}
-      <div className="admin-form-box">
-        <h2 className="admin-subtitle">
-          {editId ? "Edit Product" : "Add Product"}
-        </h2>
+        {/* ===== USERS ===== */}
+        {activeView === "users" && (
+          <>
+            <h1 className="admin-title">Users</h1>
+            <div style={{ display: "flex", gap: "24px", alignItems: "flex-start" }}>
+              <table className="admin-table" style={{ flex: 1 }}>
+                <thead>
+                  <tr><th>Avatar</th><th>Name</th><th>Email</th><th>Role</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                  {users.map((u) => (
+                    <tr
+                      key={u.user_id}
+                      onClick={() => setSelectedUser(u)}
+                      style={{
+                        cursor: "pointer",
+                        background: selectedUser?.user_id === u.user_id ? "rgba(212,160,85,0.1)" : "",
+                        transition: "background 0.2s",
+                      }}
+                    >
+                      <td>
+                        {u.profile_picture ? (
+                          <img src={u.profile_picture} alt={u.name} style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover", border: "2px solid #d4a055" }} />
+                        ) : (
+                          <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#d4a055", color: "#1a1008", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: 14 }}>
+                            {u.name?.charAt(0).toUpperCase() || "?"}
+                          </div>
+                        )}
+                      </td>
+                      <td>{u.name}</td>
+                      <td>{u.email}</td>
+                      <td>
+                        <span className="category-badge" style={u.role === "admin" ? { background: "rgba(231,76,60,0.2)", color: "#e74c3c" } : {}}>
+                          {u.role}
+                        </span>
+                      </td>
+                      <td>
+                        <button
+                          className="delete-btn"
+                          onClick={(e) => { e.stopPropagation(); deleteUser(u.user_id); }}
+                          disabled={u.role === "admin"}
+                          style={u.role === "admin" ? { opacity: 0.4, cursor: "not-allowed" } : {}}
+                        >Delete</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
 
-        <form onSubmit={handleSubmit} className="admin-form">
-          <div className="admin-fields-row">
-            <input
-              placeholder="Product Name"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              required
-              className="admin-input"
-            />
-            <select
-              value={form.category}
-              onChange={(e) => setForm({ ...form, category: e.target.value })}
-              className="admin-input"
-            >
-              <option value="">Select Category</option>
-              {FIXED_CATEGORIES.map((cat) => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
-            <input
-              type="number"
-              placeholder="Price"
-              value={form.price}
-              onChange={(e) => setForm({ ...form, price: e.target.value })}
-              className="admin-input"
-            />
-            <input
-              type="number"
-              placeholder="Stock"
-              value={form.stock}
-              onChange={(e) => setForm({ ...form, stock: e.target.value })}
-              className="admin-input"
-            />
-          </div>
-
-          <div className="admin-image-row">
-            <div className="admin-upload-box">
-              <label className="upload-label">
-                {imagePreview ? (
-                  <img src={imagePreview} className="preview-image" alt="preview" />
-                ) : (
-                  <div className="upload-placeholder">📷 Click to upload</div>
-                )}
-                <input type="file" accept="image/*" onChange={handleImageUpload} hidden />
-              </label>
-              {imagePreview && (
-                <button
-                  type="button"
-                  className="remove-image-btn"
-                  onClick={() => {
-                    setImagePreview(null);
-                    setForm({ ...form, image_url: "" });
-                  }}
-                >
-                  Remove Image
-                </button>
+              {selectedUser && (
+                <div style={{ width: 290, flexShrink: 0, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(212,160,85,0.25)", borderRadius: 12, padding: 24 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                    <span style={{ color: "#d4a055", fontWeight: 600, fontSize: 14 }}>User Details</span>
+                    <button onClick={() => setSelectedUser(null)} style={{ background: "none", border: "none", color: "#aaa", cursor: "pointer", fontSize: 16 }}>✕</button>
+                  </div>
+                  <div style={{ textAlign: "center", marginBottom: 20 }}>
+                    {selectedUser.profile_picture ? (
+                      <img src={selectedUser.profile_picture} alt={selectedUser.name} style={{ width: 80, height: 80, borderRadius: "50%", objectFit: "cover", border: "3px solid #d4a055", marginBottom: 8 }} />
+                    ) : (
+                      <div style={{ width: 80, height: 80, borderRadius: "50%", background: "#d4a055", color: "#1a1008", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: 30, margin: "0 auto 8px" }}>
+                        {selectedUser.name?.charAt(0).toUpperCase() || "?"}
+                      </div>
+                    )}
+                    <div style={{ color: "#f0e6d3", fontWeight: 600, fontSize: 16 }}>{selectedUser.name}</div>
+                    <div style={{ color: "#aaa", fontSize: 12, marginTop: 2 }}>{selectedUser.email}</div>
+                    <span className="category-badge" style={{ marginTop: 6, display: "inline-block", ...(selectedUser.role === "admin" ? { background: "rgba(231,76,60,0.2)", color: "#e74c3c" } : { background: "rgba(212,160,85,0.15)", color: "#d4a055" }) }}>
+                      {selectedUser.role?.toUpperCase()}
+                    </span>
+                  </div>
+                  {[
+                    { label: "🎂 Birthdate", value: fmt(selectedUser.birthdate) },
+                    { label: "🔢 Age", value: selectedUser.age ? `${selectedUser.age} years old` : "Not set" },
+                    { label: "📍 Address", value: selectedUser.address || "Not set" },
+                    { label: "📅 Member Since", value: fmtDT(selectedUser.created_at) },
+                  ].map(({ label, value }) => (
+                    <div key={label} style={{ borderTop: "1px solid rgba(255,255,255,0.07)", padding: "10px 0" }}>
+                      <div style={{ fontSize: 11, color: "#888", marginBottom: 2 }}>{label}</div>
+                      <div style={{ fontSize: 13, color: "#ccc", wordBreak: "break-word" }}>{value}</div>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
+          </>
+        )}
 
-            <div style={{ display: "flex", gap: "10px", alignSelf: "flex-end" }}>
-              <button
-                type="submit"
-                className={`admin-submit-btn ${editId ? "update-btn" : "add-btn"}`}
-              >
-                {editId ? "Update Product" : "Add Product"}
-              </button>
-              {editId && (
-                <button
-                  type="button"
-                  className="admin-submit-btn"
-                  onClick={cancelEdit}
-                  style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)" }}
-                >
-                  Cancel
-                </button>
-              )}
-            </div>
-          </div>
-        </form>
+        {activeView === "orders" && (<><h1 className="admin-title">Orders Board</h1><AdminOrdersBoard /></>)}
+        {activeView === "messages" && (<><h1 className="admin-title">Messages</h1><AdminMessenger /></>)}
       </div>
 
-      {/* ====================== */}
-      {/* PRODUCTS TABLE          */}
-      {/* ====================== */}
-      <h2 className="admin-subtitle" style={{ marginBottom: "16px" }}>
-        All Products
-      </h2>
-
-      <table className="admin-table" style={{ marginBottom: "48px" }}>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Image</th>
-            <th>Name</th>
-            <th>Category</th>
-            <th>Price</th>
-            <th>Stock</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {products.length > 0 ? (
-            products.map((p) => (
-              <tr key={p.product_id}>
-                <td>{p.product_id}</td>
-                <td>
-                  {p.image_url ? (
-                    <img src={p.image_url} className="table-image" alt={p.name} />
-                  ) : (
-                    <div className="no-image-placeholder">No Image</div>
-                  )}
-                </td>
-                <td>{p.name}</td>
-                <td>
-                  {p.category ? (
-                    <span className="category-badge">{p.category}</span>
-                  ) : "—"}
-                </td>
-                <td>₱{p.price}</td>
-                <td>{p.stock}</td>
-                <td>
-                  <button onClick={() => editProduct(p)} className="edit-btn">Edit</button>
-                  <button onClick={() => deleteProduct(p.product_id)} className="delete-btn">Delete</button>
-                </td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="7" className="no-products">No products found</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-
-      {/* ====================== */}
-      {/* USERS TABLE             */}
-      {/* ====================== */}
-      <h2
-        className="admin-subtitle"
-        ref={usersRef}
-        style={{ marginBottom: "16px" }}
-      >
-        All Users
-      </h2>
-
-      <table className="admin-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>Age</th>
-            <th>Address</th>
-            <th>Registered</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.length > 0 ? (
-            users.map((u) => (
-              <tr key={u.user_id}>
-                <td>{u.user_id}</td>
-                <td>{u.name}</td>
-                <td>{u.email}</td>
-                <td>
-                  <span
-                    className="category-badge"
-                    style={
-                      u.role === "admin"
-                        ? { background: "rgba(231,76,60,0.2)", color: "#e74c3c", borderColor: "rgba(231,76,60,0.3)" }
-                        : {}
-                    }
-                  >
-                    {u.role}
-                  </span>
-                </td>
-                <td>{u.age || "—"}</td>
-                <td>{u.address || "—"}</td>
-                <td>{new Date(u.created_at).toLocaleString()}</td>
-                <td>
-                  <button
-                    className="delete-btn"
-                    onClick={() => deleteUser(u.user_id, u.name)}
-                    disabled={u.role === "admin"}
-                    style={u.role === "admin" ? { opacity: 0.4, cursor: "not-allowed" } : {}}
-                    title={u.role === "admin" ? "Cannot delete admin" : "Delete account"}
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="8" className="no-products">No users found</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-
+      {/* ===== MODAL ===== */}
+      {isModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-box">
+            <h2>{editId ? "Edit Product" : "Add Product"}</h2>
+            <form className="modal-form" onSubmit={handleSubmit}>
+              <input
+                placeholder="Product Name"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                required
+              />
+              <input
+                placeholder="Description (optional)"
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+              />
+              <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
+                <option value="">Select Category</option>
+                {FIXED_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+              <input
+                type="number"
+                placeholder="Price"
+                value={form.price}
+                onChange={(e) => setForm({ ...form, price: e.target.value })}
+                required
+              />
+              <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
+                {PRODUCT_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+              </select>
+              <input type="file" accept="image/*" onChange={handleImageUpload} />
+              {imagePreview && <img src={imagePreview} className="preview-image" alt="preview" />}
+              <div className="modal-actions">
+                <button type="submit">{editId ? "Update" : "Add"}</button>
+                <button type="button" onClick={cancelEdit}>Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
