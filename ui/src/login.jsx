@@ -24,19 +24,29 @@ function Login({ setUser }) {
     try {
       const res = await fetch("http://localhost:5000/auth/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        // send as "username" since authController reads req.body.username
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
-          username: form.email,
+          email: form.email,
           password: form.password,
         }),
       });
 
-      const data = await res.json();
+      const text = await res.text();
+
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (err) {
+        console.log("Server response not JSON:", text);
+        setMessage("Server error");
+        return;
+      }
+
       setMessage(data.message);
 
       if (data.message === "Login success") {
-        // SAVE USER + user_id to localStorage
         localStorage.setItem("user", JSON.stringify(data.user));
         localStorage.setItem("user_id", data.user.user_id);
 
@@ -44,8 +54,8 @@ function Login({ setUser }) {
         navigate("/home");
       }
     } catch (error) {
-      console.error(error);
-      setMessage("Server error. Please try again.");
+      console.log(error);
+      setMessage("Cannot connect to server");
     }
   };
 

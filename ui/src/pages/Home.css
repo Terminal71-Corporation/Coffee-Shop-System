@@ -50,15 +50,7 @@
   box-shadow: 0 10px 25px rgba(184,134,60,.5);
 }
 
-.featured-section {
-  padding: 60px;
-}
 
-.featured-section h2 {
-  color: white;
-  margin-bottom: 30px;
-  font-size: 2rem;
-}
 
 .products-grid {
   display: grid;

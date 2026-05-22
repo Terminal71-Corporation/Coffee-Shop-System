@@ -1,0 +1,223 @@
+/* ── Toast stack ── */
+.notif-toast-stack {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.notif-toast {
+  pointer-events: all;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #1e140a;
+  border: 1px solid rgba(212, 160, 85, 0.35);
+  border-left: 4px solid #d4a055;
+  border-radius: 10px;
+  padding: 14px 16px;
+  min-width: 320px;
+  max-width: 380px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.55);
+  cursor: pointer;
+  animation: toastSlideIn 0.3s ease;
+}
+
+.notif-toast--order   { border-left-color: #3498db; }
+.notif-toast--message { border-left-color: #27ae60; }
+.notif-toast--product { border-left-color: #d4a055; }
+
+@keyframes toastSlideIn {
+  from { transform: translateX(120%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+.notif-toast-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.notif-toast-body { flex: 1; min-width: 0; }
+
+.notif-toast-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #f0e6d3;
+  margin-bottom: 3px;
+}
+
+.notif-toast-msg {
+  font-size: 12px;
+  color: #bbb;
+  line-height: 1.45;
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.notif-toast-close {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0 2px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.notif-toast-close:hover { color: #e74c3c; }
+
+/* ── Bell wrapper ── */
+.notif-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.notif-bell {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  position: relative;
+  padding: 4px 6px;
+  border-radius: 8px;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.notif-bell:hover { background: rgba(212, 160, 85, 0.15); }
+
+.notif-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #e74c3c;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  pointer-events: none;
+}
+
+/* ── Dropdown panel ── */
+.notif-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 360px;
+  background: #1a0f06;
+  border: 1px solid rgba(212, 160, 85, 0.3);
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.notif-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  font-size: 15px;
+  font-weight: 700;
+  color: #f0e6d3;
+}
+
+.notif-clear-btn {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 3px 8px;
+  border-radius: 5px;
+  transition: color 0.2s, background 0.2s;
+}
+.notif-clear-btn:hover { color: #e74c3c; background: rgba(231,76,60,0.1); }
+
+.notif-list {
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.notif-empty {
+  padding: 32px 20px;
+  text-align: center;
+  color: #555;
+  font-size: 14px;
+}
+
+/* ── Notification item ── */
+.notif-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  transition: background 0.15s;
+  position: relative;
+}
+.notif-item:last-child { border-bottom: none; }
+.notif-item:hover { background: rgba(255, 255, 255, 0.04); }
+
+.notif-unread { background: rgba(212, 160, 85, 0.08); }
+.notif-read   { opacity: 0.72; }
+
+.notif-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.notif-content { flex: 1; min-width: 0; }
+
+.notif-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #f0e6d3;
+  margin-bottom: 3px;
+}
+
+.notif-message {
+  font-size: 12px;
+  color: #aaa;
+  line-height: 1.45;
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.notif-time {
+  font-size: 11px;
+  color: #666;
+  margin-top: 5px;
+}
+
+/* Unread blue dot */
+.notif-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #d4a055;
+  flex-shrink: 0;
+  margin-top: 6px;
+}
