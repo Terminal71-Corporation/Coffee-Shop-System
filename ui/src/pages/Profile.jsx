@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import "./Profile.css";
+const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function Profile({ setUser }) {
   const [user, setUserData] = useState(null);
@@ -17,7 +18,7 @@ function Profile({ setUser }) {
     if (!id) return;
 
     try {
-      const res = await fetch(`http://localhost:5000/users/${id}`);
+      const res = await fetch(`${VITE_API_URL}/users/${id}`);
       const data = await res.json();
 
       setUserData(data);
@@ -35,7 +36,7 @@ function Profile({ setUser }) {
   const updateBirthdate = async () => {
     const id = localStorage.getItem("user_id");
 
-    await fetch(`http://localhost:5000/users/${id}/birthdate`, {
+    await fetch(`${VITE_API_URL}/users/${id}/birthdate`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ birthdate }),
@@ -51,7 +52,7 @@ function Profile({ setUser }) {
   const updateAddress = async () => {
     const id = localStorage.getItem("user_id");
 
-    await fetch(`http://localhost:5000/users/${id}/address`, {
+    await fetch(`${VITE_API_URL}/users/${id}/address`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ address }),
@@ -75,7 +76,7 @@ function Profile({ setUser }) {
 
       const id = localStorage.getItem("user_id");
 
-      await fetch(`http://localhost:5000/users/${id}/profile-picture`, {
+      await fetch(`${VITE_API_URL}/users/${id}/profile-picture`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ profile_picture: reader.result }),
@@ -87,7 +88,8 @@ function Profile({ setUser }) {
     reader.readAsDataURL(file);
   };
 
-  if (!user) return <h1 style={{ color: "white", padding: "50px" }}>Loading...</h1>;
+  if (!user)
+    return <h1 style={{ color: "white", padding: "50px" }}>Loading...</h1>;
 
   return (
     <>
@@ -95,7 +97,6 @@ function Profile({ setUser }) {
 
       <div className="profile-page">
         <div className="profile-card">
-
           {/* PROFILE IMAGE */}
           <div className="profile-image-section">
             {profileImage ? (
@@ -124,7 +125,6 @@ function Profile({ setUser }) {
 
           {/* INFO FIELDS */}
           <div className="profile-info">
-
             <div className="info-box">
               <label>Birthdate</label>
               <input
@@ -150,7 +150,6 @@ function Profile({ setUser }) {
               <label>Member Since</label>
               <p>{new Date(user.created_at).toLocaleString()}</p>
             </div>
-
           </div>
         </div>
       </div>

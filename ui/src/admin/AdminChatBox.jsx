@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import socket from "../services/messageService"; // src/services/messageService.js
+const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function AdminChatBox({ adminId, selectedUser }) {
 
@@ -30,7 +31,7 @@ function AdminChatBox({ adminId, selectedUser }) {
     if (!selectedUser) return;
     try {
       const res  = await fetch(
-        `http://localhost:5000/api/messages/conversation/${adminId}/${selectedUser.user_id}`
+        `${VITE_API_URL}/api/messages/conversation/${adminId}/${selectedUser.user_id}`
       );
       const data = await res.json();
       setMessages(Array.isArray(data) ? data : []);
@@ -55,7 +56,7 @@ function AdminChatBox({ adminId, selectedUser }) {
     };
 
     // Save to database
-    await fetch("http://localhost:5000/api/messages/send", {
+    await fetch(`${VITE_API_URL}/api/messages/send`, {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
       body:    JSON.stringify(newMessage),

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import "./Messenger.css";
 import socket from "../services/messageService";
+const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 const ADMIN_ID = 1;
 
@@ -39,7 +40,7 @@ function Messenger({ userId }) {
   // FETCH OLD MESSAGES
   const fetchMessages = async () => {
     try {
-      const res  = await fetch(`http://localhost:5000/api/messages/conversation/${userId}/${ADMIN_ID}`);
+      const res  = await fetch(`${VITE_API_URL}/api/messages/conversation/${userId}/${ADMIN_ID}`);
       const data = await res.json();
       setMessages(data);
     } catch (err) { console.log(err); }
@@ -62,7 +63,7 @@ function Messenger({ userId }) {
     if (!text.trim()) return;
     const newMessage = { sender_id: userId, receiver_id: ADMIN_ID, message: text };
 
-    await fetch("http://localhost:5000/api/messages/send", {
+    await fetch(`${VITE_API_URL}/api/messages/send`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(newMessage),

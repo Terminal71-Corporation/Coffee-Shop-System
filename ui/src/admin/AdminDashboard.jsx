@@ -8,12 +8,19 @@ import socket from "../services/messageService";
 import "./AdminStyle.css";
 import "./AdminOrdersBoard.css";
 
-const FIXED_CATEGORIES = ["Espresso", "Latte", "Tea", "Pastries", "Beans", "Equipment"];
+const FIXED_CATEGORIES = [
+  "Espresso",
+  "Latte",
+  "Tea",
+  "Pastries",
+  "Beans",
+  "Equipment",
+];
 const PRODUCT_STATUSES = ["Available", "Not Available", "Best Seller"];
 const STATUS_STYLE = {
-  "Available":     { color: "#3cb371", bg: "rgba(46,139,87,0.15)" },
+  Available: { color: "#3cb371", bg: "rgba(46,139,87,0.15)" },
   "Not Available": { color: "#e74c3c", bg: "rgba(192,57,43,0.15)" },
-  "Best Seller":   { color: "#d4a055", bg: "rgba(212,160,85,0.15)" },
+  "Best Seller": { color: "#d4a055", bg: "rgba(212,160,85,0.15)" },
 };
 
 function AdminDashboard() {
@@ -30,30 +37,43 @@ function AdminDashboard() {
   const [users, setUsers] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
   const [form, setForm] = useState({
-    name: "", description: "", category: "", price: "", status: "Available", image_url: ""
+    name: "",
+    description: "",
+    category: "",
+    price: "",
+    status: "Available",
+    image_url: "",
   });
   const [editId, setEditId] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
 
   const fetchProducts = async () => {
     try {
-      const res = await fetch("http://localhost:5000/products");
+      const res = await fetch(`${VITE_API_URL}/products`);
       const data = await res.json();
       setProducts([...data].reverse());
-    } catch (err) { console.log(err); }
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch("http://localhost:5000/users");
+      const res = await fetch(`${VITE_API_URL}/users`);
       const data = await res.json();
       setUsers(Array.isArray(data) ? data : []);
-    } catch (err) { console.log(err); }
+    } catch (err) {
+      console.log(err);
+    }
   };
 
-  useEffect(() => { fetchProducts(); fetchUsers(); }, []);
+  useEffect(() => {
+    fetchProducts();
+    fetchUsers();
+  }, []);
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -71,30 +91,42 @@ function AdminDashboard() {
     const payload = { ...form, price: Number(form.price) };
     try {
       if (editId) {
-        await fetch(`http://localhost:5000/products/${editId}`, {
+        await fetch(`${VITE_API_URL}/products/${editId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
       } else {
-        await fetch("http://localhost:5000/products", {
+        await fetch(`${VITE_API_URL}/products`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
-        socket.emit("admin_new_product", { name: payload.name, price: payload.price });
+        socket.emit("admin_new_product", {
+          name: payload.name,
+          price: payload.price,
+        });
       }
       setEditId(null);
-      setForm({ name: "", description: "", category: "", price: "", status: "Available", image_url: "" });
+      setForm({
+        name: "",
+        description: "",
+        category: "",
+        price: "",
+        status: "Available",
+        image_url: "",
+      });
       setImagePreview(null);
       setIsModalOpen(false);
       fetchProducts();
-    } catch (err) { console.log(err); }
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   const deleteProduct = async (id) => {
     if (!window.confirm("Delete this product?")) return;
-    await fetch(`http://localhost:5000/products/${id}`, { method: "DELETE" });
+    await fetch(`${VITE_API_URL}/products/${id}`, { method: "DELETE" });
     fetchProducts();
   };
 
@@ -114,42 +146,67 @@ function AdminDashboard() {
 
   const cancelEdit = () => {
     setEditId(null);
-    setForm({ name: "", description: "", category: "", price: "", status: "Available", image_url: "" });
+    setForm({
+      name: "",
+      description: "",
+      category: "",
+      price: "",
+      status: "Available",
+      image_url: "",
+    });
     setImagePreview(null);
     setIsModalOpen(false);
   };
 
   const deleteUser = async (id) => {
     if (!window.confirm("Delete this user?")) return;
-    await fetch(`http://localhost:5000/users/${id}`, { method: "DELETE" });
+    await fetch(`${VITE_API_URL}/users/${id}`, { method: "DELETE" });
     setSelectedUser(null);
     fetchUsers();
   };
 
-  const fmt = (val) => val ? new Date(val).toLocaleDateString() : "Not set";
-  const fmtDT = (val) => val ? new Date(val).toLocaleString() : "—";
+  const fmt = (val) => (val ? new Date(val).toLocaleDateString() : "Not set");
+  const fmtDT = (val) => (val ? new Date(val).toLocaleString() : "—");
 
   return (
     <div className="admin-layout">
       <AdminNavbar activeView={activeView} setActiveView={setActiveView} />
 
       <div className="admin-content">
-
         {/* ===== PRODUCTS ===== */}
         {activeView === "products" && (
           <>
             <div className="title-bar">
               <h1 className="admin-title">Products</h1>
-              <button className="add-btn admin-submit-btn" onClick={() => {
-                setEditId(null);
-                setForm({ name: "", description: "", category: "", price: "", status: "Available", image_url: "" });
-                setImagePreview(null);
-                setIsModalOpen(true);
-              }}>+ Add Product</button>
+              <button
+                className="add-btn admin-submit-btn"
+                onClick={() => {
+                  setEditId(null);
+                  setForm({
+                    name: "",
+                    description: "",
+                    category: "",
+                    price: "",
+                    status: "Available",
+                    image_url: "",
+                  });
+                  setImagePreview(null);
+                  setIsModalOpen(true);
+                }}
+              >
+                + Add Product
+              </button>
             </div>
             <table className="admin-table">
               <thead>
-                <tr><th>Image</th><th>Name</th><th>Category</th><th>Price</th><th>Status</th><th>Actions</th></tr>
+                <tr>
+                  <th>Image</th>
+                  <th>Name</th>
+                  <th>Category</th>
+                  <th>Price</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
               </thead>
               <tbody>
                 {products.map((p) => {
@@ -157,21 +214,46 @@ function AdminDashboard() {
                   return (
                     <tr key={p.product_id}>
                       <td>
-                        {p.image_url
-                          ? <img src={p.image_url} className="table-image" alt={p.name} />
-                          : <div className="no-image-placeholder">No Image</div>}
+                        {p.image_url ? (
+                          <img
+                            src={p.image_url}
+                            className="table-image"
+                            alt={p.name}
+                          />
+                        ) : (
+                          <div className="no-image-placeholder">No Image</div>
+                        )}
                       </td>
                       <td>{p.name}</td>
-                      <td><span className="category-badge">{p.category}</span></td>
+                      <td>
+                        <span className="category-badge">{p.category}</span>
+                      </td>
                       <td>₱{p.price}</td>
                       <td>
-                        <span className="category-badge" style={{ background: s.bg, color: s.color, borderColor: s.color + "55" }}>
+                        <span
+                          className="category-badge"
+                          style={{
+                            background: s.bg,
+                            color: s.color,
+                            borderColor: s.color + "55",
+                          }}
+                        >
                           {p.status || "Available"}
                         </span>
                       </td>
                       <td>
-                        <button className="edit-btn" onClick={() => editProduct(p)}>Edit</button>
-                        <button className="delete-btn" onClick={() => deleteProduct(p.product_id)}>Delete</button>
+                        <button
+                          className="edit-btn"
+                          onClick={() => editProduct(p)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="delete-btn"
+                          onClick={() => deleteProduct(p.product_id)}
+                        >
+                          Delete
+                        </button>
                       </td>
                     </tr>
                   );
@@ -185,10 +267,18 @@ function AdminDashboard() {
         {activeView === "users" && (
           <>
             <h1 className="admin-title">Users</h1>
-            <div style={{ display: "flex", gap: "24px", alignItems: "flex-start" }}>
+            <div
+              style={{ display: "flex", gap: "24px", alignItems: "flex-start" }}
+            >
               <table className="admin-table" style={{ flex: 1 }}>
                 <thead>
-                  <tr><th>Avatar</th><th>Name</th><th>Email</th><th>Role</th><th>Actions</th></tr>
+                  <tr>
+                    <th>Avatar</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Actions</th>
+                  </tr>
                 </thead>
                 <tbody>
                   {users.map((u) => (
@@ -197,15 +287,41 @@ function AdminDashboard() {
                       onClick={() => setSelectedUser(u)}
                       style={{
                         cursor: "pointer",
-                        background: selectedUser?.user_id === u.user_id ? "rgba(212,160,85,0.1)" : "",
+                        background:
+                          selectedUser?.user_id === u.user_id
+                            ? "rgba(212,160,85,0.1)"
+                            : "",
                         transition: "background 0.2s",
                       }}
                     >
                       <td>
                         {u.profile_picture ? (
-                          <img src={u.profile_picture} alt={u.name} style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover", border: "2px solid #d4a055" }} />
+                          <img
+                            src={u.profile_picture}
+                            alt={u.name}
+                            style={{
+                              width: 36,
+                              height: 36,
+                              borderRadius: "50%",
+                              objectFit: "cover",
+                              border: "2px solid #d4a055",
+                            }}
+                          />
                         ) : (
-                          <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#d4a055", color: "#1a1008", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: 14 }}>
+                          <div
+                            style={{
+                              width: 36,
+                              height: 36,
+                              borderRadius: "50%",
+                              background: "#d4a055",
+                              color: "#1a1008",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontWeight: "bold",
+                              fontSize: 14,
+                            }}
+                          >
                             {u.name?.charAt(0).toUpperCase() || "?"}
                           </div>
                         )}
@@ -213,17 +329,36 @@ function AdminDashboard() {
                       <td>{u.name}</td>
                       <td>{u.email}</td>
                       <td>
-                        <span className="category-badge" style={u.role === "admin" ? { background: "rgba(231,76,60,0.2)", color: "#e74c3c" } : {}}>
+                        <span
+                          className="category-badge"
+                          style={
+                            u.role === "admin"
+                              ? {
+                                  background: "rgba(231,76,60,0.2)",
+                                  color: "#e74c3c",
+                                }
+                              : {}
+                          }
+                        >
                           {u.role}
                         </span>
                       </td>
                       <td>
                         <button
                           className="delete-btn"
-                          onClick={(e) => { e.stopPropagation(); deleteUser(u.user_id); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteUser(u.user_id);
+                          }}
                           disabled={u.role === "admin"}
-                          style={u.role === "admin" ? { opacity: 0.4, cursor: "not-allowed" } : {}}
-                        >Delete</button>
+                          style={
+                            u.role === "admin"
+                              ? { opacity: 0.4, cursor: "not-allowed" }
+                              : {}
+                          }
+                        >
+                          Delete
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -231,34 +366,151 @@ function AdminDashboard() {
               </table>
 
               {selectedUser && (
-                <div style={{ width: 290, flexShrink: 0, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(212,160,85,0.25)", borderRadius: 12, padding: 24 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                    <span style={{ color: "#d4a055", fontWeight: 600, fontSize: 14 }}>User Details</span>
-                    <button onClick={() => setSelectedUser(null)} style={{ background: "none", border: "none", color: "#aaa", cursor: "pointer", fontSize: 16 }}>✕</button>
+                <div
+                  style={{
+                    width: 290,
+                    flexShrink: 0,
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px solid rgba(212,160,85,0.25)",
+                    borderRadius: 12,
+                    padding: 24,
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginBottom: 16,
+                    }}
+                  >
+                    <span
+                      style={{
+                        color: "#d4a055",
+                        fontWeight: 600,
+                        fontSize: 14,
+                      }}
+                    >
+                      User Details
+                    </span>
+                    <button
+                      onClick={() => setSelectedUser(null)}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: "#aaa",
+                        cursor: "pointer",
+                        fontSize: 16,
+                      }}
+                    >
+                      ✕
+                    </button>
                   </div>
                   <div style={{ textAlign: "center", marginBottom: 20 }}>
                     {selectedUser.profile_picture ? (
-                      <img src={selectedUser.profile_picture} alt={selectedUser.name} style={{ width: 80, height: 80, borderRadius: "50%", objectFit: "cover", border: "3px solid #d4a055", marginBottom: 8 }} />
+                      <img
+                        src={selectedUser.profile_picture}
+                        alt={selectedUser.name}
+                        style={{
+                          width: 80,
+                          height: 80,
+                          borderRadius: "50%",
+                          objectFit: "cover",
+                          border: "3px solid #d4a055",
+                          marginBottom: 8,
+                        }}
+                      />
                     ) : (
-                      <div style={{ width: 80, height: 80, borderRadius: "50%", background: "#d4a055", color: "#1a1008", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: 30, margin: "0 auto 8px" }}>
+                      <div
+                        style={{
+                          width: 80,
+                          height: 80,
+                          borderRadius: "50%",
+                          background: "#d4a055",
+                          color: "#1a1008",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontWeight: "bold",
+                          fontSize: 30,
+                          margin: "0 auto 8px",
+                        }}
+                      >
                         {selectedUser.name?.charAt(0).toUpperCase() || "?"}
                       </div>
                     )}
-                    <div style={{ color: "#f0e6d3", fontWeight: 600, fontSize: 16 }}>{selectedUser.name}</div>
-                    <div style={{ color: "#aaa", fontSize: 12, marginTop: 2 }}>{selectedUser.email}</div>
-                    <span className="category-badge" style={{ marginTop: 6, display: "inline-block", ...(selectedUser.role === "admin" ? { background: "rgba(231,76,60,0.2)", color: "#e74c3c" } : { background: "rgba(212,160,85,0.15)", color: "#d4a055" }) }}>
+                    <div
+                      style={{
+                        color: "#f0e6d3",
+                        fontWeight: 600,
+                        fontSize: 16,
+                      }}
+                    >
+                      {selectedUser.name}
+                    </div>
+                    <div style={{ color: "#aaa", fontSize: 12, marginTop: 2 }}>
+                      {selectedUser.email}
+                    </div>
+                    <span
+                      className="category-badge"
+                      style={{
+                        marginTop: 6,
+                        display: "inline-block",
+                        ...(selectedUser.role === "admin"
+                          ? {
+                              background: "rgba(231,76,60,0.2)",
+                              color: "#e74c3c",
+                            }
+                          : {
+                              background: "rgba(212,160,85,0.15)",
+                              color: "#d4a055",
+                            }),
+                      }}
+                    >
                       {selectedUser.role?.toUpperCase()}
                     </span>
                   </div>
                   {[
-                    { label: "🎂 Birthdate", value: fmt(selectedUser.birthdate) },
-                    { label: "🔢 Age", value: selectedUser.age ? `${selectedUser.age} years old` : "Not set" },
-                    { label: "📍 Address", value: selectedUser.address || "Not set" },
-                    { label: "📅 Member Since", value: fmtDT(selectedUser.created_at) },
+                    {
+                      label: "🎂 Birthdate",
+                      value: fmt(selectedUser.birthdate),
+                    },
+                    {
+                      label: "🔢 Age",
+                      value: selectedUser.age
+                        ? `${selectedUser.age} years old`
+                        : "Not set",
+                    },
+                    {
+                      label: "📍 Address",
+                      value: selectedUser.address || "Not set",
+                    },
+                    {
+                      label: "📅 Member Since",
+                      value: fmtDT(selectedUser.created_at),
+                    },
                   ].map(({ label, value }) => (
-                    <div key={label} style={{ borderTop: "1px solid rgba(255,255,255,0.07)", padding: "10px 0" }}>
-                      <div style={{ fontSize: 11, color: "#888", marginBottom: 2 }}>{label}</div>
-                      <div style={{ fontSize: 13, color: "#ccc", wordBreak: "break-word" }}>{value}</div>
+                    <div
+                      key={label}
+                      style={{
+                        borderTop: "1px solid rgba(255,255,255,0.07)",
+                        padding: "10px 0",
+                      }}
+                    >
+                      <div
+                        style={{ fontSize: 11, color: "#888", marginBottom: 2 }}
+                      >
+                        {label}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 13,
+                          color: "#ccc",
+                          wordBreak: "break-word",
+                        }}
+                      >
+                        {value}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -267,8 +519,18 @@ function AdminDashboard() {
           </>
         )}
 
-        {activeView === "orders" && (<><h1 className="admin-title">Orders Board</h1><AdminOrdersBoard /></>)}
-        {activeView === "messages" && (<><h1 className="admin-title">Messages</h1><AdminMessenger /></>)}
+        {activeView === "orders" && (
+          <>
+            <h1 className="admin-title">Orders Board</h1>
+            <AdminOrdersBoard />
+          </>
+        )}
+        {activeView === "messages" && (
+          <>
+            <h1 className="admin-title">Messages</h1>
+            <AdminMessenger />
+          </>
+        )}
       </div>
 
       {/* ===== MODAL ===== */}
@@ -286,11 +548,20 @@ function AdminDashboard() {
               <input
                 placeholder="Description (optional)"
                 value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, description: e.target.value })
+                }
               />
-              <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
+              <select
+                value={form.category}
+                onChange={(e) => setForm({ ...form, category: e.target.value })}
+              >
                 <option value="">Select Category</option>
-                {FIXED_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                {FIXED_CATEGORIES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
               </select>
               <input
                 type="number"
@@ -299,14 +570,33 @@ function AdminDashboard() {
                 onChange={(e) => setForm({ ...form, price: e.target.value })}
                 required
               />
-              <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
-                {PRODUCT_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+              <select
+                value={form.status}
+                onChange={(e) => setForm({ ...form, status: e.target.value })}
+              >
+                {PRODUCT_STATUSES.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
               </select>
-              <input type="file" accept="image/*" onChange={handleImageUpload} />
-              {imagePreview && <img src={imagePreview} className="preview-image" alt="preview" />}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+              />
+              {imagePreview && (
+                <img
+                  src={imagePreview}
+                  className="preview-image"
+                  alt="preview"
+                />
+              )}
               <div className="modal-actions">
                 <button type="submit">{editId ? "Update" : "Add"}</button>
-                <button type="button" onClick={cancelEdit}>Cancel</button>
+                <button type="button" onClick={cancelEdit}>
+                  Cancel
+                </button>
               </div>
             </form>
           </div>

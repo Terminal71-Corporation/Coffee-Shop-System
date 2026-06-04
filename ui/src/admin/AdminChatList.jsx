@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function AdminChatList({ setSelectedUser }) {
 
@@ -6,7 +7,7 @@ function AdminChatList({ setSelectedUser }) {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/messages/admin/users");
+      const res = await fetch(`${VITE_API_URL}/api/messages/admin/users`);
       const data = await res.json();
       setUsers(Array.isArray(data) ? data : []); // ← safe guard
     } catch (err) {

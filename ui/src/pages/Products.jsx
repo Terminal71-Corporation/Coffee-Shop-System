@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import "./Products.css";
+const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 const CATEGORIES = [
   "All",
@@ -26,7 +27,7 @@ function Products({ setUser }) {
 
   const fetchProducts = async () => {
     try {
-      const res = await fetch("http://localhost:5000/products");
+      const res = await fetch(`${VITE_API_URL}/products`);
       const data = await res.json();
       setProducts(data);
     } catch (err) {

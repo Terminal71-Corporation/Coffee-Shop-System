@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import "./ItemPage.css";
+const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 const STATUS_STYLE = {
   "Available":     { color: "#3cb371", bg: "rgba(46,139,87,0.2)",   border: "rgba(46,139,87,0.3)" },
@@ -22,7 +23,7 @@ function ItemPage({ setUser }) {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/products/${id}`);
+        const res = await fetch(`${VITE_API_URL}/products/${id}`);
         const data = await res.json();
         if (data.message) {
           setProduct(null);
