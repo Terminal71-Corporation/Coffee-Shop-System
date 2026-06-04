@@ -1,13 +1,14 @@
 import { io } from "socket.io-client";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
-const socket = io("http://localhost:5000", {
+const socket = io(`${BASE_URL}`, {
   transports: ["websocket"],
 });
 
 export default socket;
 
 // ── Message API helpers ──
-const API = "http://localhost:5000/api/messages";
+const API = `${BASE_URL}/api/messages`
 
 export const sendMessage = async (data) => {
   const res = await fetch(`${API}/send`, {
