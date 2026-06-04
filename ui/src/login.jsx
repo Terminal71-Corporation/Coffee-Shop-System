@@ -23,7 +23,7 @@ function Login({ setUser }) {
     e.preventDefault();
 
     try {
-      const res = await fetch(`${BASE_URL}/api/messages/auth/login`, {
+      const res = await fetch(`${BASE_URL}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
