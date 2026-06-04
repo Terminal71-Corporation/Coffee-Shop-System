@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import logo1 from "./assets/logo1.png";
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function Login({ setUser }) {
   const [form, setForm] = useState({
@@ -23,7 +23,7 @@ function Login({ setUser }) {
     e.preventDefault();
 
     try {
-      const res = await fetch("https://coffee-shop-system-q5ow.onrender.com/auth/login", {
+      const res = await fetch(`${VITE_API_URL}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
