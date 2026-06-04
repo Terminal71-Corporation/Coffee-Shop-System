@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import logo1 from "./assets/logo1.png";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 function Login({ setUser }) {
   const [form, setForm] = useState({
@@ -22,7 +23,7 @@ function Login({ setUser }) {
     e.preventDefault();
 
     try {
-      const res = await fetch("http://localhost:5000/auth/login", {
+      const res = await fetch(`${BASE_URL}/api/messages/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
